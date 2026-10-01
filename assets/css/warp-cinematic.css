@@ -95,10 +95,8 @@
 @keyframes rift-expand { 0% { opacity: 0; transform: scale(.08); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(5); } }
 @keyframes signal-wash { 0% { opacity: 0; } 40% { opacity: .32; } 100% { opacity: 0; } }
 @media(max-width:600px) { .warp-cinema-caption { bottom: 16%; } .warp-pass { width: 180px; height: 96px; } .warp-pass strong { font-size: 16px; } }
-@media(prefers-reduced-motion:reduce) { .warp-cinema.running *, .warp-cinema::after { animation: none !important; transition: none !important; } .warp-pass { display: none; } .warp-orbits, .warp-sigil, .warp-rift { display: none; } }
 #single-card-container .warp-reveal-enter { animation: warp-reveal-enter .8s cubic-bezier(.2,.75,.25,1) both; }
 @keyframes warp-reveal-enter { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@media(prefers-reduced-motion:reduce) { #single-card-container .warp-reveal-enter { animation: none; opacity: 1; transform: none; } }
 
 /* A five-star path is announced before its artwork and voice. */
 #single-card-container:has(.warp-path-intro) + div { opacity: 0; }
@@ -111,4 +109,3 @@
 .warp-path-intro strong { margin-top: 12px; font-size: clamp(26px, 5vw, 40px); font-weight: 700; letter-spacing: .25em; text-indent: .25em; text-shadow: 0 0 24px #ffcc6670; }
 @keyframes warp-path-intro { 0% { opacity: 0; transform: scale(.92); } 28%, 76% { opacity: 1; } 100% { opacity: 0; transform: scale(1.04); } }
 @keyframes warp-path-halo { from { transform: rotate(-18deg) scale(.8); } to { transform: rotate(12deg) scale(1.08); } }
-@media(prefers-reduced-motion:reduce) { .warp-path-intro, .warp-path-halo { animation: none; } }

@@ -6,10 +6,10 @@
     <title>붕괴: 스타레일 워프 & 로비 시뮬레이터</title>
     <!-- Tailwind CSS 불러오기 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="assets/relic-calculator.css">
-    <link rel="stylesheet" href="assets/profile-storage.css">
-    <link rel="stylesheet" href="assets/team-builder.css">
-    <link rel="stylesheet" href="assets/warp-cinematic.css">
+    <link rel="stylesheet" href="assets/css/relic-calculator.css">
+    <link rel="stylesheet" href="assets/css/profile-storage.css">
+    <link rel="stylesheet" href="assets/css/team-builder.css">
+    <link rel="stylesheet" href="assets/css/warp-cinematic.css">
     <style>
         /* 폰트: 영어/숫자는 Orbitron, 한글은 Noto Sans KR */
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+KR:wght@300;500;700;900&display=swap');
@@ -221,7 +221,9 @@
         .illustration-info h2 { margin: 6px 0; font-size: clamp(22px, 3.5vw, 42px); font-weight: 900; word-break: keep-all; }
         .illustration-info p { color: #e2e0eb; font-size: 13px; margin: 6px 0 0; }
         .illustration-stars { letter-spacing: 4px; font-size: 22px; }
-        #single-card-container .illustration { opacity: 0; }
+        /* Keep artwork visible in its base state before and after the reveal. */
+        #single-card-container .illustration { opacity: 1; }
+        .illustration-loading { position: absolute; top: 5%; left: 5%; right: 5%; color: #dce3ef; font-size: 12px; text-align: center; }
         .warp-character-name { max-width: 48vw; word-break: keep-all; }
         #single-card-container:has(.illustration) + div { position: absolute; bottom: 3%; margin: 0; }
         #art-viewer { position: fixed; inset: 0; z-index: 120; display: none; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #312746, #070b16 80%); }
@@ -354,7 +356,7 @@
             <p>이 브라우저 안에서 사용하는 저장용 아이디입니다. 영문 대소문자는 구분하지 않습니다. 비밀번호 없이 같은 아이디의 데이터를 열 수 있으며, 다른 기기·브라우저와는 연동되지 않습니다.</p>
         </form>
     </section>
-    <script src="assets/profile-storage.js"></script>
+    <script src="assets/js/profile-storage.js"></script>
     <div id="app-content" inert>
     <div id="bg-stars"></div>
 
@@ -437,9 +439,9 @@
                 <h1 id="warp-banner-title" class="warp-title">창해에서 맺은 진주</h1>
                 <p id="warp-banner-subtitle" class="warp-subtitle">★5 캐릭터 「펄 · 환락 · 얼음」<br><span class="warp-rate">출현 확률 UP!</span></p>
                 <div id="warp-banner-featured" class="warp-featured" aria-label="4성 픽업 캐릭터">
-                    <div class="warp-portrait"><img src="assets/misha.png" alt="미샤"><span>미샤</span></div>
-                    <div class="warp-portrait"><img src="assets/xueyi.png" alt="설의"><span>설의</span></div>
-                    <div class="warp-portrait"><img src="assets/qingque.png" alt="청작"><span>청작</span></div>
+                    <div class="warp-portrait"><img src="assets/images/misha.png" alt="미샤"><span>미샤</span></div>
+                    <div class="warp-portrait"><img src="assets/images/xueyi.png" alt="설의"><span>설의</span></div>
+                    <div class="warp-portrait"><img src="assets/images/qingque.png" alt="청작"><span>청작</span></div>
                 </div>
                 <p id="warp-banner-note" class="warp-panel-note">이벤트 기간 한정 캐릭터 확률 증가<br>10회 워프 시 ★4 이상의 캐릭터 또는 광추 확정</p>
                 <button id="warp-details-open" class="warp-details-button" onclick="openWarpDetails()">ⓘ 상세보기</button>
@@ -544,14 +546,15 @@
         <input id="warp-beat-volume" type="range" min="0" max="100" value="35" aria-label="워프 오디오 볼륨">
         <span id="warp-beat-title" aria-live="polite"></span>
     </div>
-    <script src="assets/warp-music-tracks.js"></script>
-    <script src="assets/warp-voice-lines.js"></script>
-    <script src="assets/warp-audio.js"></script>
-    <script src="assets/warp-cinematic.js"></script>
-    <script src="assets/warp-path-reveal.js"></script>
-    <script src="assets/light-cones.js"></script>
-    <script src="assets/characters.js"></script>
-    <script src="assets/warp-banner-data.js"></script>
+    <script src="assets/js/warp-music-tracks.js"></script>
+    <script src="assets/js/warp-voice-lines.js"></script>
+    <script src="assets/js/warp-audio.js"></script>
+    <script src="assets/js/warp-cinematic.js"></script>
+    <script src="assets/js/warp-path-reveal.js"></script>
+    <script src="assets/js/warp-artwork.js"></script>
+    <script src="assets/js/light-cones.js"></script>
+    <script src="assets/js/characters.js"></script>
+    <script src="assets/js/warp-banner-data.js"></script>
     <script>
         const db = [
             // [ 5성 캐릭터 ]
@@ -565,9 +568,9 @@
             { name: "운리", rarity: 5, type: "character", isUp: false, image: "" },
 
             // [ 4성 캐릭터 ]
-            { name: "미샤", rarity: 4, type: "character", isUp: true, image: "assets/misha.png" },
-            { name: "설의", rarity: 4, type: "character", isUp: true, image: "assets/xueyi.png" },
-            { name: "청작", rarity: 4, type: "character", isUp: true, image: "assets/qingque.png" },
+            { name: "미샤", rarity: 4, type: "character", isUp: true, image: "assets/images/misha.png" },
+            { name: "설의", rarity: 4, type: "character", isUp: true, image: "assets/images/xueyi.png" },
+            { name: "청작", rarity: 4, type: "character", isUp: true, image: "assets/images/qingque.png" },
             { name: "Mar. 7th", rarity: 4, type: "character", isUp: false, image: "" },
             { name: "단항", rarity: 4, type: "character", isUp: false, image: "" },
             { name: "아를란", rarity: 4, type: "character", isUp: false, image: "" },
@@ -860,7 +863,7 @@
                 const choice = pickupChoices[type].find(entry=>entry.id===selectedPickups[type]) || pickupChoices[type][0];
                 const item = choice.featured;
                 const art = document.getElementById(`lobby-art-${type}`);
-                art.src = item.portrait || item.image;
+                WarpArtwork.setSource(art, item);
                 art.alt = item.name;
                 const kind = type === 'character' ? '캐릭터' : '광추';
                 const warpName = `${kind} ${choice.collaboration ? '콜라보' : '이벤트'} 워프`;
@@ -915,7 +918,7 @@
             const isCone = type === 'lightcone';
             document.getElementById('warp-pickup-label').textContent = banner.title;
             const art = document.getElementById('warp-banner-art');
-            art.src = item.portrait;
+            WarpArtwork.setSource(art, item);
             art.alt = `${item.name} 일러스트`;
             art.className = `warp-art${isCone ? ' lightcone-art' : ''}`;
             document.getElementById('warp-banner-tag').textContent = `${isCone ? '광추' : '캐릭터'} ${choice.collaboration ? '콜라보' : '이벤트'} 워프`;
@@ -938,7 +941,8 @@
             const content = document.createElement('div');
             content.className = `illustration ${item.type} text-${item.rarity}star`;
             const detail = item.type === 'character' ? [item.pathName, item.elementName].filter(Boolean).join(' · ') : '광추';
-            content.innerHTML = `<img class="illustration-img" src="${item.portrait || item.image}" alt="${escapeHTML(item.name)} 일러스트"><div class="illustration-info"><div class="illustration-stars">${'★'.repeat(item.rarity)}</div><h2>${escapeHTML(item.name)}</h2><p>${escapeHTML(detail)}</p></div>`;
+            content.innerHTML = `<img class="illustration-img" alt="${escapeHTML(item.name)} 일러스트"><p class="illustration-loading" role="status"></p><div class="illustration-info"><div class="illustration-stars">${'★'.repeat(item.rarity)}</div><h2>${escapeHTML(item.name)}</h2><p>${escapeHTML(detail)}</p></div>`;
+            WarpArtwork.setSource(content.querySelector('img'), item, { status: content.querySelector('.illustration-loading') });
             return content;
         }
 
@@ -1076,8 +1080,8 @@
             revealQueue = results;
             WarpAudio.preloadVoices(results);
             WarpPathReveal.preload(results);
-            // Warm the full-size artwork while the portal animation is playing.
-            results.forEach(item => { const image = new Image(); image.src = item.portrait || item.image; image.decode?.().catch(() => {}); });
+            // Preload one illustration instead of decoding ten large PNGs at once.
+            WarpArtwork.preload(results);
             playAnimation(maxRarity);
         }
 
@@ -1086,9 +1090,17 @@
             DOM.warp.style.pointerEvents = 'none';
             DOM.skipBtn.style.display = 'block';
             DOM.anim.style.display = 'flex';
-            WarpCinematic.start({rarity:maxRarity, count:revealQueue.length, featured:revealQueue.find(item=>item.rarity===5), onComplete:()=>{
+            try {
+                if (!globalThis.WarpCinematic) throw new Error('Warp cinematic unavailable');
+                WarpCinematic.start({rarity:maxRarity, count:revealQueue.length, featured:revealQueue.find(item=>item.rarity===5), onComplete:()=>{
+                    startRevealSequence();
+                }});
+            } catch (error) {
+                console.warn('워프 연출을 사용할 수 없어 결과를 바로 표시합니다.', error);
+                globalThis.WarpCinematic?.stop();
+                DOM.anim.style.display = 'none';
                 startRevealSequence();
-            }});
+            }
         }
 
         function handleSkip() {
@@ -1326,11 +1338,11 @@
                     <div id="relic-rank-scale" class="relic-rank-scale"></div>
                 </aside>
             </div>
-            <details class="relic-method"><summary>표를 어떻게 반영하나요?</summary><p>준종결 목표를 모두 충족하면 85점(S), 이후 종결까지의 추가 달성률을 반영해 95점부터 SS를 부여합니다. 더 엄격한 종결 목표가 하나 이상 있고 모든 종결 조건을 충족해야 100점(SSS)입니다. 준종결 조건이 하나라도 부족하면 최대 84.9점입니다. 동일한 준종결·종결 조건은 유지해야 할 조건으로만 평가합니다. 종결 제안값과 등급은 원본 표에 없는 계산기의 기준이며, 실제 조합의 최적 세팅을 보장하지 않습니다. 저장은 캐릭터별로 현재 수치·목표·평가 방식·가중치를 이 브라우저에 보관합니다.</p><p>유물 한 개 평가는 표의 ‘유효 부가옵션’에 있는 옵션에 동등한 가중치 1, 나머지에 0을 적용합니다. 표에 숫자 가중치와 SSS~C 등급 기준은 없으므로 등급 구간은 이 계산기의 기준입니다. 여러 빌드가 있는 행은 유효 옵션을 합쳐 표시하므로, 실제 빌드에서 제외할 옵션은 가중치를 조정하세요. 초기 옵션과 강화 5회를 5성 최고 강화 수치로 환산한 뒤 최적의 가중 합을 100점으로 표시합니다.</p><p>기준: 붕괴 : 스타레일 세팅 4.6V · 수정: 네이드, ode. 조합·성혼·광추·세트에 따른 조건은 캐릭터별 원문을 확인하세요.</p><a href="assets/relic-setting-reference.pdf" target="_blank" rel="noopener noreferrer">첨부 준종결 표 원본 보기 ↗</a> · <a href="https://github.com/Mar-7th/StarRailRes/blob/master/index_new/en/relic_sub_affixes.json" target="_blank" rel="noopener noreferrer">부옵션 강화 수치 데이터 ↗</a></details>
+            <details class="relic-method"><summary>표를 어떻게 반영하나요?</summary><p>준종결 목표를 모두 충족하면 85점(S), 이후 종결까지의 추가 달성률을 반영해 95점부터 SS를 부여합니다. 더 엄격한 종결 목표가 하나 이상 있고 모든 종결 조건을 충족해야 100점(SSS)입니다. 준종결 조건이 하나라도 부족하면 최대 84.9점입니다. 동일한 준종결·종결 조건은 유지해야 할 조건으로만 평가합니다. 종결 제안값과 등급은 원본 표에 없는 계산기의 기준이며, 실제 조합의 최적 세팅을 보장하지 않습니다. 저장은 캐릭터별로 현재 수치·목표·평가 방식·가중치를 이 브라우저에 보관합니다.</p><p>유물 한 개 평가는 표의 ‘유효 부가옵션’에 있는 옵션에 동등한 가중치 1, 나머지에 0을 적용합니다. 표에 숫자 가중치와 SSS~C 등급 기준은 없으므로 등급 구간은 이 계산기의 기준입니다. 여러 빌드가 있는 행은 유효 옵션을 합쳐 표시하므로, 실제 빌드에서 제외할 옵션은 가중치를 조정하세요. 초기 옵션과 강화 5회를 5성 최고 강화 수치로 환산한 뒤 최적의 가중 합을 100점으로 표시합니다.</p><p>기준: 붕괴 : 스타레일 세팅 4.6V · 수정: 네이드, ode. 조합·성혼·광추·세트에 따른 조건은 캐릭터별 원문을 확인하세요.</p><a href="docs/references/relic-setting-reference.pdf" target="_blank" rel="noopener noreferrer">첨부 준종결 표 원본 보기 ↗</a> · <a href="https://github.com/Mar-7th/StarRailRes/blob/master/index_new/en/relic_sub_affixes.json" target="_blank" rel="noopener noreferrer">부옵션 강화 수치 데이터 ↗</a></details>
         </div>
     </section>
-    <script src="assets/relic-reference.js"></script>
-    <script src="assets/relic-calculator.js"></script>
+    <script src="assets/js/relic-reference.js"></script>
+    <script src="assets/js/relic-calculator.js"></script>
     <section id="team-screen" aria-labelledby="team-heading" hidden>
         <div class="team-shell">
             <header class="team-header"><button id="team-back" type="button">‹ 로비로 돌아가기</button><span>TEAM LAB / 2026.10.01</span></header>
@@ -1353,9 +1365,9 @@
             </div>
         </div>
     </section>
-    <script src="assets/team-synergy-data.js"></script>
-    <script src="assets/team-meta-presets.js"></script>
-    <script src="assets/team-builder.js"></script>
+    <script src="assets/js/team-synergy-data.js"></script>
+    <script src="assets/js/team-meta-presets.js"></script>
+    <script src="assets/js/team-builder.js"></script>
     </div>
 </body>
 </html>

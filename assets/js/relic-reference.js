@@ -1,5 +1,5 @@
 // User-provided source: 붕스 세팅정리의 사본 - 세팅.pdf; 붕괴 : 스타레일 세팅 4.6V; 수정: 네이드, ode
-const relicReferenceExtraCharacters = [{"id": "reference-aha", "name": "에이언즈★아하", "pathName": "환락", "elementName": "표 기준", "path": "Elation", "image": "assets/relic-aha.png"}];
+const relicReferenceExtraCharacters = [{"id": "reference-aha", "name": "에이언즈★아하", "pathName": "환락", "elementName": "표 기준", "path": "Elation", "image": "assets/images/relic-aha.png"}];
 const relicBuildReference = {
   "1102": {
     "name": "제레",

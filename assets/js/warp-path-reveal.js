@@ -39,7 +39,7 @@
         const name = document.createElement('strong'); name.textContent = item.pathName || path[1];
         overlay.append(halo, icon, label, name); container.appendChild(overlay);
         pending = onReveal;
-        timer = setTimeout(finish, matchMedia('(prefers-reduced-motion: reduce)').matches ? 450 : 1450);
+        timer = setTimeout(finish, 1450);
     }
     globalThis.WarpPathReveal = Object.freeze({show, stop, finish, preload});
 })();

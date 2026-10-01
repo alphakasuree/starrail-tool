@@ -89,9 +89,7 @@
                 signalOpen.hidden=true;signalOpen.onclick=null;resume();
             };
         };
-        if(matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            awaitClick(()=>{stage('signal',rarity,count);timer=setTimeout(()=>{globalThis.WarpAudio?.drop();finish();},700);});return;
-        }
+        // Keep the cinematic and timing identical across OS animation settings.
         stars=Array.from({length:width<600 ? 90 : 170},()=>({angle:Math.random()*Math.PI*2,distance:.03+Math.random()*.6,z:.12+Math.random()*.88,size:.5+Math.random()}));
         started=performance.now();let previous=started;
         const burstAt=rarity===5 ? 4300 : rarity===4 ? 3400 : 3250;

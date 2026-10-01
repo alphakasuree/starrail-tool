@@ -311,17 +311,14 @@
             panel.classList.remove('relic-impact');
             void panel.offsetWidth;
             panel.classList.add('relic-impact');
-            if (matchMedia('(prefers-reduced-motion: reduce)').matches) get('relic-score').textContent = result.score.toFixed(1);
-            else {
-                const start = performance.now();
-                const tick = now => {
-                    const t = Math.min(1, (now - start) / 600);
-                    get('relic-score').textContent = (result.score * (1 - (1 - t) ** 3)).toFixed(1);
-                    if (t < 1) animation = requestAnimationFrame(tick);
-                };
-                animation = requestAnimationFrame(tick);
-            }
-            if (matchMedia('(max-width: 760px)').matches) panel.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start'});
+            const start = performance.now();
+            const tick = now => {
+                const t = Math.min(1, (now - start) / 600);
+                get('relic-score').textContent = (result.score * (1 - (1 - t) ** 3)).toFixed(1);
+                if (t < 1) animation = requestAnimationFrame(tick);
+            };
+            animation = requestAnimationFrame(tick);
+            if (matchMedia('(max-width: 760px)').matches) panel.scrollIntoView({behavior: 'smooth', block: 'start'});
         } catch (error) {
             get('relic-error').textContent = error.message;
             get('relic-error').hidden = false;

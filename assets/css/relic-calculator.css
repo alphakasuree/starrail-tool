@@ -82,4 +82,3 @@
 .relic-impact .relic-score-ring { animation: relic-impact .55s ease-out; }
 @keyframes relic-impact { 0% { transform: scale(.92); } 45% { transform: scale(1.035); box-shadow: 0 0 45px #a8f4d028; } 100% { transform: scale(1); } }
 @media (max-width: 760px) { .relic-shell { padding: 18px 16px 32px; } .relic-layout { grid-template-columns: 1fr; } .relic-result { position: static; } .relic-panel { padding: 20px; } .relic-intro { margin-top: 24px; } .relic-weight-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (prefers-reduced-motion: reduce) { .relic-impact .relic-score-ring { animation: none; } .relic-analyze { transition: none; } }
