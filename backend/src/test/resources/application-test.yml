@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:honkai;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    properties:
+      hibernate.type.preferred_instant_jdbc_type: TIMESTAMP
+app:
+  allowed-origins: https://example.github.io

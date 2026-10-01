@@ -45,4 +45,10 @@ node scripts/verify.mjs
 
 JS 구문, 로컬 리소스 경로와 대소문자, 카탈로그 일러스트, 이미지 대체 로직을 확인합니다. 실제 모바일 브라우저의 시각 검증은 별도로 필요합니다.
 
-현재 기록은 브라우저의 프로필별 localStorage에 저장됩니다. 백엔드 마이그레이션은 아직 적용하지 않았습니다.
+기본 설정에서는 기록이 브라우저의 프로필별 localStorage에 저장됩니다. `backend/`에 Spring Boot + MySQL 서버와 워프 API 연결을 추가했습니다. 실행·배포·연결 방법은 [백엔드 안내](backend/README.md)를 참고하세요. `assets/js/backend-config.js`에 서버 주소를 설정하면 워프 추첨·천장·기록을 서버에서 관리합니다. 유물 세팅과 저장 파티는 기존 로컬 저장을 유지합니다.
+
+API 통신 검증:
+
+```sh
+node scripts/verify-warp-api.mjs
+```

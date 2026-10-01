@@ -356,6 +356,8 @@
             <p>이 브라우저 안에서 사용하는 저장용 아이디입니다. 영문 대소문자는 구분하지 않습니다. 비밀번호 없이 같은 아이디의 데이터를 열 수 있으며, 다른 기기·브라우저와는 연동되지 않습니다.</p>
         </form>
     </section>
+    <script src="assets/js/backend-config.js"></script>
+    <script src="assets/js/warp-api.js"></script>
     <script src="assets/js/profile-storage.js"></script>
     <div id="app-content" inert>
     <div id="bg-stars"></div>
@@ -730,7 +732,7 @@
             userInventory={};warpHistory={character:[],lightcone:[],characterCollaboration:[],lightconeCollaboration:[]};historyPage=0;
             progressStorageAvailable=true;
             try {
-            const saved = JSON.parse(HonkaiProfileStorage.getItem(progressStorageKey) || 'null');
+            const saved = HonkaiWarpApi.enabled ? HonkaiWarpApi.progress : JSON.parse(HonkaiProfileStorage.getItem(progressStorageKey) || 'null');
             if (saved?.version === 1) {
                 for (const type of warpStateKeys) {
                     const state = saved.bannerStates?.[type];
@@ -756,6 +758,7 @@
         function saveWarpProgress() {
             if (!HonkaiProfileStorage.id) return;
             bannerStates[activeStateKey] = { pity5, pity4, guaranteed5, guaranteed4 };
+            if (HonkaiWarpApi.enabled) return;
             try {
                 HonkaiProfileStorage.setItem(progressStorageKey, JSON.stringify({ version: 1, bannerStates, selectedPickups, history: warpHistory, inventory: userInventory }));
                 progressStorageAvailable = true;
@@ -856,6 +859,7 @@
             if(isWarping || !pickupChoices[activeBanner].some(entry=>entry.id===id))return;
             selectedPickups[activeBanner]=id;
             selectBanner(activeBanner);saveWarpProgress();
+            if (HonkaiWarpApi.enabled) HonkaiWarpApi.saveSelection(selectedPickups).catch(error => console.warn('픽업 선택 저장 실패', error));
             closeBannerPicker();
         }
         function updateLobbyPickups() {
@@ -1060,9 +1064,10 @@
             DOM.g4Text.style.opacity = guaranteed4 ? '1' : '0';
         }
 
-        function doWarp(count) {
+        async function doWarp(count) {
             if (!HonkaiProfileStorage.id) return;
             if (isWarping) return;
+            if (![1, 10].includes(count)) return;
             isWarping = true;
             document.getElementById('warp-banner-select').disabled=true;
             document.getElementById('warp-type-character').disabled=true;
@@ -1071,10 +1076,34 @@
             let results = [];
             let maxRarity = 3;
 
-            for (let i = 0; i < count; i++) {
-                let item = pullSingle();
-                results.push(item);
-                if (item.rarity > maxRarity) maxRarity = item.rarity;
+            if (HonkaiWarpApi.enabled) {
+                try {
+                    const response = await HonkaiWarpApi.pull(`${activeBanner}:${selectedPickups[activeBanner]}`, count, activeStateKey);
+                    activeStateKey = response.pityGroup;
+                    bannerStates[activeStateKey] = { ...response.state };
+                    ({ pity5, pity4, guaranteed5, guaranteed4 } = response.state);
+                    const knownIds = new Set(warpHistory[activeStateKey].map(entry => entry.historyId).filter(Boolean));
+                    warpHistory[activeStateKey].push(...response.results.filter(entry => !knownIds.has(entry.historyId)));
+                    results = response.results.map(record => {
+                        const item = collectionItems.find(entry => entry.type === record.type && entry.id === record.id);
+                        if (!item) throw new Error('서버와 사이트의 캐릭터 데이터 버전이 다릅니다. 새로고침해 주세요.');
+                        userInventory[getInventoryKey(item)] = 1;
+                        return item;
+                    });
+                    maxRarity = Math.max(...results.map(item => item.rarity));
+                } catch (error) {
+                    isWarping = false;
+                    for (const id of ['warp-banner-select', 'warp-type-character', 'warp-type-lightcone']) document.getElementById(id).disabled = false;
+                    alert(error.status === 409 ? '다른 탭에서 기록이 변경되었습니다. 서버 기록을 다시 불러옵니다.' : `${error.message || '서버 연결 실패'}\n다시 뽑기 버튼을 누르면 미확인 요청을 재시도합니다.`);
+                    if ([400, 409].includes(error.status)) loadWarpProgress();
+                    return;
+                }
+            } else {
+                for (let i = 0; i < count; i++) {
+                    let item = pullSingle();
+                    results.push(item);
+                    if (item.rarity > maxRarity) maxRarity = item.rarity;
+                }
             }
 
             revealQueue = results;

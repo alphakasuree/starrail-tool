@@ -27,8 +27,10 @@
     });
     document.addEventListener('DOMContentLoaded',()=>{
         const get = id=>document.getElementById(id);
-        get('profile-login-form').addEventListener('submit',event=>{
+        get('profile-login-form').addEventListener('submit',async event=>{
             event.preventDefault();
+            const submit = event.currentTarget.querySelector('[type="submit"]');
+            if (submit.disabled) return;
             const id = get('profile-login-id').value.trim().normalize('NFC').toLowerCase();
             const error = get('profile-login-error');
             error.textContent='';
@@ -37,18 +39,22 @@
                 return;
             }
             try {
+                submit.disabled=true;
                 initializeStorage();
                 // Check writes too so a read-only browser cannot appear to save successfully.
                 localStorage.setItem(resetKey,'done');
+                if (globalThis.HonkaiWarpApi?.enabled) await HonkaiWarpApi.connect(id);
                 activeId=id;
                 globalThis.dispatchEvent(new Event('honkai-profile-login'));
                 get('profile-current-id').textContent=`${id} 님`;
                 get('app-content').inert=false;
                 get('profile-login-screen').hidden=true;
                 get('profile-change').focus();
-            } catch {
+            } catch (failure) {
                 activeId=null;
-                error.textContent='저장 공간을 사용할 수 없습니다. 브라우저의 사이트 데이터 저장을 허용한 뒤 다시 접속하세요.';
+                error.textContent=globalThis.HonkaiWarpApi?.enabled ? `서버에 접속하지 못했습니다. ${failure.message || '연결을 확인하세요.'}` : '저장 공간을 사용할 수 없습니다. 브라우저의 사이트 데이터 저장을 허용한 뒤 다시 접속하세요.';
+            } finally {
+                submit.disabled=false;
             }
         });
         get('profile-change').addEventListener('click',()=>location.reload());
