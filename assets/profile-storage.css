@@ -1,0 +1,13 @@
+#profile-login-screen { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: radial-gradient(ellipse at top, #283154, #080d18 70%); color: #edf2ff; }
+#profile-login-screen[hidden] { display: none; }
+.profile-login-card { width: min(100%, 420px); padding: 32px; border: 1px solid #657296; border-radius: 24px; background: #142036e8; box-shadow: 0 20px 70px #0006; }
+.profile-login-card h1 { font-size: 28px; font-weight: 900; margin: 8px 0 18px; }
+.profile-login-card p { font-size: 13px; color: #acbdd4; line-height: 1.8; }
+.profile-login-card label { display: block; margin: 24px 0 8px; font-size: 13px; }
+.profile-login-card input { width: 100%; padding: 14px; border: 1px solid #60738e; border-radius: 10px; background: #091222; color: white; font: inherit; }
+.profile-login-card input:focus { outline: 2px solid #b8caff; outline-offset: 2px; }
+.profile-login-card button { width: 100%; padding: 14px; margin: 16px 0; border: 0; border-radius: 10px; background: #c2d3ff; color: #10203e; font: inherit; font-weight: 800; cursor: pointer; }
+#profile-login-error { color: #ffb7bc; min-height: 24px; }
+.profile-account { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; font-size: 13px; color: #c9d7f4; }
+.profile-account button { padding: 6px 10px; border: 1px solid #566681; border-radius: 8px; background: #142036; color: #d9e4ff; cursor: pointer; }
+#app-content[inert] { visibility: hidden; }

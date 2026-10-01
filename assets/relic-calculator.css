@@ -1,0 +1,85 @@
+#relic-screen { position: fixed; inset: 0; z-index: 25; overflow-y: auto; background: radial-gradient(ellipse at 80% 0, #16333680, transparent 55%), #080d18; color: #e7edf5; user-select: text; }
+#relic-screen[hidden] { display: none; }
+.relic-shell { max-width: 1160px; margin: 0 auto; padding: 24px 32px 44px; }
+.relic-header, .relic-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.relic-back, .relic-text-button { border: 0; background: transparent; color: #acd9d5; font: inherit; cursor: pointer; }
+.relic-back { padding: 8px 0; font-size: 13px; }
+.relic-eyebrow { font-size: 10px; letter-spacing: .16em; color: #82b7b0; }
+.relic-intro { margin: 32px 0 28px; }
+.relic-intro h1 { font-size: clamp(30px, 4vw, 48px); font-weight: 900; letter-spacing: -.055em; margin: 8px 0 12px; }
+.relic-intro h1 span { color: #a8f4d0; }
+.relic-intro > p:last-child { color: #a4b2c6; font-size: 13px; }
+.relic-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; align-items: start; }
+.relic-panel { border: 1px solid #314156; border-radius: 20px; padding: 26px; background: linear-gradient(145deg, #142132e0, #0d1524); }
+.relic-panel-heading h2, .relic-panel-heading h3 { font-size: 17px; font-weight: 700; }
+.relic-chip { border: 1px solid #536146; border-radius: 20px; padding: 5px 10px; font-size: 10px; color: #dbd4a6; }
+.relic-character { display: flex; align-items: center; gap: 16px; margin: 22px 0; }
+.relic-character img { width: 74px; height: 88px; object-fit: cover; border-radius: 12px; border: 1px solid #63758a; background: #26394a; }
+.relic-character > div { flex: 1; min-width: 0; }
+.relic-search-select-label { margin-top: 10px; }
+#relic-character-search-count { margin: 6px 0 0; }
+.relic-mode-tabs { display: flex; gap: 8px; margin: 18px 0; }
+.relic-mode-tabs button { flex: 1; padding: 10px 6px; border: 1px solid #3b4c63; border-radius: 10px; background: #0a1220; color: #a9bdd0; font: inherit; font-size: 12px; cursor: pointer; }
+.relic-mode-tabs button[aria-selected="true"] { border-color: #9fe8cc; background: #213f3c; color: #c7f5e5; }
+.relic-reference-card { padding: 14px; border: 1px solid #36554e; background: #10231f60; border-radius: 12px; margin-bottom: 20px; font-size: 12px; }
+.relic-reference-card summary { color: #b7e9d7; cursor: pointer; }
+#relic-reference-content p { color: #a5bbcf; line-height: 1.8; margin: 10px 0; }
+#relic-reference-content strong { color: #e3eee9; }
+.relic-target-heading, .relic-target-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1fr 52px 18px; align-items: center; gap: 6px; margin: 10px 0; font-size: 11px; }
+.relic-target-heading { color: #9cb0c7; }
+.relic-target-row button { border: 0; background: transparent; color: #a5b9cc; cursor: pointer; }
+.relic-target-row select { padding: 11px 3px !important; font-size: 11px !important; }
+.relic-target-row input { padding: 11px 7px !important; }
+.relic-target-add { display: flex; gap: 10px; margin: 16px 0; }
+.relic-target-add button { flex-shrink: 0; border: 1px solid #425c66; border-radius: 8px; background: #163237; color: #d5e8e1; padding: 8px 12px; font: inherit; font-size: 11px; cursor: pointer; }
+@media (max-width: 460px) { .relic-target-heading, .relic-target-row { grid-template-columns: 1fr 1fr 1fr 1fr 43px 14px; gap: 3px; font-size: 10px; } .relic-target-row input { padding: 10px 3px !important; font-size: 11px !important; } }
+.relic-save-panel { margin-top: 24px; padding-top: 20px; border-top: 1px solid #314156; }
+.relic-save-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+.relic-save-row select, .relic-save-row input { flex: 1; min-width: 160px; }
+.relic-save-row #relic-delete { border-color: #925b68; background: #432631; color: #ffd0d9; }
+.relic-save-row button[hidden] { display: none; }
+.relic-save-row button { flex-shrink: 0; border: 1px solid #577e73; border-radius: 9px; padding: 8px 12px; background: #213f3c; color: #c7f5e5; font: inherit; font-size: 12px; cursor: pointer; }
+.relic-save-row button:disabled { opacity: .4; cursor: default; }
+#relic-form label { display: block; margin-bottom: 8px; font-size: 12px; color: #aebfd3; }
+#relic-form select, #relic-form input { width: 100%; min-width: 0; background: #080f1c; border: 1px solid #3b4c63; border-radius: 9px; color: #e8eef7; padding: 11px 12px; font: inherit; font-size: 13px; }
+#relic-form select:focus, #relic-form input:focus { outline: 2px solid #99e9cf; outline-offset: 2px; }
+#relic-character-meta { font-size: 11px; margin: 8px 0 0; color: #83afa8; }
+.relic-muted { font-size: 11px; color: #91a4bc; line-height: 1.8; margin: 8px 0 14px; }
+.relic-subheading { margin-top: 24px; }
+.relic-text-button { font-size: 11px; padding: 6px; }
+.relic-stat-row { display: grid; grid-template-columns: 1.4fr 1fr 28px; align-items: center; gap: 10px; margin: 10px 0; }
+.relic-stat-row > span { font-size: 12px; color: #a0b0c5; }
+.relic-weight-details { margin-top: 22px; padding-top: 18px; border-top: 1px solid #2d3d51; }
+.relic-weight-details summary { font-size: 12px; cursor: pointer; color: #d4e4ed; }
+.relic-weight-details summary span { color: #879cb3; font-size: 10px; margin-left: 8px; }
+.relic-weight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px; }
+.relic-form-actions { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
+.relic-analyze { display: flex; justify-content: space-between; flex: 1; padding: 14px 18px; background: #adf0d6; color: #0c2424; border: 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; transition: box-shadow .2s, transform .2s; }
+.relic-analyze:hover { box-shadow: 0 0 25px #a3f4d536; transform: translateY(-2px); }
+.relic-reset { border: 0; background: none; color: #a3b6ca; font: inherit; font-size: 11px; cursor: pointer; }
+.relic-error { color: #ffb7bc; font-size: 12px; margin: 16px 0 0; line-height: 1.7; }
+.relic-result { --rank-color: #91a4b8; --score-angle: 0deg; position: sticky; top: 24px; text-align: center; }
+.relic-score-ring { width: 218px; height: 218px; margin: 28px auto 20px; border-radius: 50%; padding: 3px; background: conic-gradient(var(--rank-color) var(--score-angle), #263648 0); box-shadow: 0 0 45px #0004; }
+.relic-score-ring > div { display: flex; flex-direction: column; justify-content: center; height: 100%; border-radius: 50%; background: radial-gradient(circle, #1b3040, #0b1727); }
+#relic-rank { color: var(--rank-color); font-family: 'Orbitron', sans-serif; font-size: 52px; font-weight: 900; text-shadow: 0 0 22px color-mix(in srgb, var(--rank-color) 35%, transparent); }
+.relic-score-ring p { font-size: 12px; color: #8fa8b9; margin: 7px 0 0; }
+#relic-score { font-family: 'Orbitron', sans-serif; font-size: 22px; color: #f0f5fc; }
+.relic-result-message { min-height: 46px; font-size: 13px; color: #dce9f3; line-height: 1.8; }
+.relic-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 18px 0; margin: 14px 0; border-top: 1px solid #2c3d50; border-bottom: 1px solid #2c3d50; }
+.relic-metrics span { display: block; font-size: 10px; color: #91a8bb; }
+.relic-metrics strong { display: block; margin-top: 6px; font-size: 21px; }
+.relic-breakdown { text-align: left; }
+.relic-contribution { margin: 13px 0; }
+.relic-contribution > div:first-child { display: flex; justify-content: space-between; font-size: 11px; color: #c8d7e5; }
+.relic-bar { height: 5px; background: #263648; border-radius: 6px; margin-top: 7px; overflow: hidden; }
+.relic-bar span { display: block; height: 100%; background: var(--rank-color); border-radius: 6px; }
+.relic-rank-scale { display: flex; justify-content: space-between; gap: 6px; padding-top: 22px; font-size: 10px; color: #8a9cb1; }
+.relic-rank-scale b { display: block; margin-top: 4px; font-weight: 500; }
+.relic-method { color: #99aabe; font-size: 12px; line-height: 1.9; margin-top: 24px; border-top: 1px solid #2d3c4f; padding-top: 18px; }
+.relic-method summary { cursor: pointer; }
+.relic-method p { margin: 12px 0; }
+.relic-method a { color: #a8e8d5; text-decoration: underline; }
+.relic-impact .relic-score-ring { animation: relic-impact .55s ease-out; }
+@keyframes relic-impact { 0% { transform: scale(.92); } 45% { transform: scale(1.035); box-shadow: 0 0 45px #a8f4d028; } 100% { transform: scale(1); } }
+@media (max-width: 760px) { .relic-shell { padding: 18px 16px 32px; } .relic-layout { grid-template-columns: 1fr; } .relic-result { position: static; } .relic-panel { padding: 20px; } .relic-intro { margin-top: 24px; } .relic-weight-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .relic-impact .relic-score-ring { animation: none; } .relic-analyze { transition: none; } }

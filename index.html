@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>붕괴: 스타레일 워프 & 로비 시뮬레이터</title>
+    <!-- Tailwind CSS 불러오기 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="assets/relic-calculator.css">
+    <link rel="stylesheet" href="assets/profile-storage.css">
+    <link rel="stylesheet" href="assets/team-builder.css">
+    <link rel="stylesheet" href="assets/warp-cinematic.css">
+    <style>
+        /* 폰트: 영어/숫자는 Orbitron, 한글은 Noto Sans KR */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+KR:wght@300;500;700;900&display=swap');
+
+        /* 공통 색상 변수 설정 */
+        :root {
+            --bg-color: #050814;
+            --c-5star: #ffcc66;  /* 5성 금색 */
+            --c-4star: #c776ff;  /* 4성 보라색 */
+            --c-3star: #54a2ff;  /* 3성 파란색 */
+            --glow-color: var(--c-3star); /* 동적 애니메이션 빛 색상 */
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #ffffff;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow: hidden; 
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            user-select: none;
+        }
+
+        .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+        /* 도감 모달 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* -------------------------------------------
+           배경 및 스크린 (로비, 워프, 애니메이션, 결과 등)
+           ------------------------------------------- */
+        #bg-stars {
+            position: absolute; inset: 0; z-index: -1;
+            background: radial-gradient(circle at center, #111526 0%, var(--bg-color) 100%);
+            overflow: hidden;
+        }
+        .star {
+            position: absolute; background: white; border-radius: 50%;
+            animation: twinkle infinite alternate;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.1; transform: scale(0.8); }
+            100% { opacity: 0.8; transform: scale(1.2); }
+        }
+
+        /* 각 스크린 공통 스타일 */
+        .screen {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.4s ease;
+        }
+        
+        /* 초기 디스플레이 설정 */
+        #lobby-screen { display: flex; z-index: 20; }
+        #warp-screen { display: none; z-index: 30; opacity: 0; }
+        #anim-screen { display: none; z-index: 40; }
+        #single-reveal-screen { display: none; z-index: 50; background: rgba(0,0,0,0.9); cursor: pointer; }
+        #result-screen { display: none; z-index: 60; background: rgba(0,0,0,0.95); padding: 2rem; overflow-y: auto; }
+
+        /* 버튼 및 상태창 스타일 */
+        .btn {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(8px);
+            position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: pointer;
+        }
+        .btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: skewX(-20deg); transition: 0.5s;
+        }
+        .btn:hover::before { left: 150%; }
+        .btn:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.6); box-shadow: 0 10px 20px rgba(255,255,255,0.1); }
+
+        .status-box {
+            background: rgba(0,0,0,0.4); border: 1px solid #334155;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        /* -------------------------------------------
+           결과 카드 렌더링 스타일
+           ------------------------------------------- */
+        .gacha-card {
+            background: #111; border-radius: 8px; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+        }
+        .card-img-bg { position: absolute; inset: 0; z-index: 1; background-size: cover; background-position: center; }
+        .card-overlay { position: absolute; inset: 0; z-index: 2; background: linear-gradient(180deg, transparent 20%, rgba(0,0,0,0.95) 100%); }
+        .card-content { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 12px; }
+        
+        .card-name { font-weight: 700; text-align: center; text-shadow: 0 2px 5px rgba(0,0,0,1); word-break: keep-all; line-height: 1.2; }
+        .text-5star { color: var(--c-5star); }
+        .text-4star { color: var(--c-4star); }
+        .text-3star { color: var(--c-3star); }
+        .stars-disp { margin-bottom: 6px; letter-spacing: 2px; text-shadow: 0 0 5px rgba(255,255,255,0.3); }
+
+        .border-5star { border: 2px solid var(--c-5star); box-shadow: 0 0 30px rgba(255, 204, 102, 0.4); }
+        .border-4star { border: 2px solid var(--c-4star); box-shadow: 0 0 20px rgba(199, 118, 255, 0.3); }
+        .border-3star { border: 2px solid var(--c-3star); box-shadow: 0 0 10px rgba(84, 162, 255, 0.2); }
+
+        /* 단일 화면 공개용 대형 카드 */
+        .single-reveal-card {
+            width: 200px; height: 320px;
+            opacity: 0; transform: scale(0.5) translateY(50px);
+        }
+        @media (min-width: 768px) { .single-reveal-card { width: 300px; height: 480px; } }
+        .single-reveal-card .card-name { font-size: 1.6rem; }
+        .single-reveal-card .stars-disp { font-size: 1.4rem; }
+        
+        .anim-pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn {
+            0% { transform: scale(0.5) translateY(50px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* 요약창 그리드 */
+        .cards-grid {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; max-width: 1200px;
+        }
+        .summary-card {
+            width: 140px; height: 220px;
+            opacity: 0; transform: translateY(20px); transition: all 0.4s ease-out;
+        }
+        @media (min-width: 768px) { .summary-card { width: 160px; height: 260px; } }
+        .summary-card.reveal { opacity: 1; transform: translateY(0); }
+        .summary-card .card-name { font-size: 1.1rem; }
+        .summary-card .stars-disp { font-size: 0.9rem; }
+
+
+        /* -------------------------------------------
+           도감 모달 스타일
+           ------------------------------------------- */
+        #collection-modal {
+            position: fixed; inset: 0; z-index: 100; background: rgba(5, 8, 17, 0.95); backdrop-filter: blur(15px);
+            display: none; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 3rem 1rem; opacity: 0; transition: opacity 0.3s;
+        }
+        .collection-box {
+            width: 100%; max-width: 1000px; max-height: 85vh; background: #0d1224; border: 1px solid #1e293b;
+            border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .tab-btn {
+            flex: 1; padding: 1rem; text-align: center; font-size: 1.1rem; font-weight: bold;
+            color: #94a3b8; background: #0f172a; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s;
+        }
+        .tab-btn.active { color: white; background: #1e293b; border-bottom: 2px solid var(--c-3star); }
+        .collection-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
+        
+        .col-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; margin-bottom: 2rem;
+        }
+        @media (min-width: 768px) { .col-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; } }
+        
+        .col-item {
+            position: relative; aspect-ratio: 3/4; background: #111; border-radius: 6px; overflow: hidden;
+            border: 1px solid #333; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: all 0.2s;
+        }
+        .col-item.locked { filter: saturate(0.6) brightness(0.8); }
+        .col-item.unlocked:hover { transform: scale(1.05); z-index: 2; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .col-item.unlocked.rarity-5 { border-color: var(--c-5star); }
+        .col-item.unlocked.rarity-4 { border-color: var(--c-4star); }
+        .col-item.unlocked.rarity-3 { border-color: var(--c-3star); }
+
+        .col-badge {
+            position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.85); padding: 2px 8px;
+            border-radius: 12px; font-size: 0.75rem; font-weight: bold; border: 1px solid #444; z-index: 5;
+        }
+        .col-item-name { width: 100%; text-align: center; font-size: 0.8rem; font-weight: 700; padding: 6px 2px; z-index: 4; word-break: keep-all; text-shadow: 0 1px 3px black; }
+        .col-item-detail { display: block; margin-top: 3px; font-size: 10px; font-weight: 500; color: #cbd5e1; }
+        button.col-item { width: 100%; padding: 0; font: inherit; color: inherit; cursor: pointer; }
+        button.col-item:hover { filter: none; transform: translateY(-3px); border-color: #e6d1ff; }
+        button.col-item:focus-visible { outline: 3px solid #70a8d4; outline-offset: 3px; }
+        .banner-tabs { display: flex; gap: 6px; }
+        .lobby-layout { display: grid; grid-template-columns: 1fr 1fr .65fr; gap: 24px; width: 100%; max-width: 1200px; min-height: 55vh; }
+        .lobby-pickup { position: relative; overflow: hidden; min-height: 330px; padding: 0; border: 1px solid #8375aa70; border-radius: 20px; background: radial-gradient(ellipse at top, #434968, #111b31); color: white; text-align: left; cursor: pointer; transition: border-color .2s, transform .2s; }
+        .lobby-pickup:hover { transform: translateY(-4px); border-color: #d7c9ff; }
+        .lobby-pickup:focus-visible { outline: 3px solid #70a8d4; outline-offset: 4px; }
+        .lobby-pickup img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+        .lobby-pickup:hover img { transform: scale(1.04); }
+        .lobby-pickup.cone { background: radial-gradient(ellipse at top, #706457, #211a2c); }
+        .lobby-pickup.cone img { object-fit: contain; padding: 20px 20px 100px; }
+        .lobby-pickup-copy { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 30px; background: linear-gradient(transparent 35%, #080c1bbf 65%, #080c1b); }
+        .lobby-pickup-copy small { color: #d0c1ee; letter-spacing: .15em; font-size: 11px; }
+        .lobby-pickup-copy h2 { font-size: 28px; font-weight: 900; margin: 10px 0 8px; }
+        .lobby-pickup-copy p { font-size: 12px; line-height: 1.7; color: #c5cad8; }
+        @media (max-width: 900px) {
+            #lobby-screen { overflow-y: auto; justify-content: flex-start; padding-top: 32px; }
+            .lobby-layout { grid-template-columns: 1fr 1fr; }
+            .lobby-layout > .lobby-menu { grid-column: 1 / -1; flex-direction: row; min-height: 130px; }
+        }
+        @media (max-width: 520px) {
+            .lobby-layout { grid-template-columns: 1fr; gap: 16px; }
+            .lobby-pickup { min-height: 270px; }
+            .lobby-pickup-copy { padding: 22px; }
+            .lobby-pickup-copy h2 { font-size: 25px; }
+        }
+        .banner-tab { border: 1px solid #ffffff50; border-radius: 22px; padding: 8px 14px; background: #15152599; color: #c8c5dd; font: inherit; font-size: 12px; cursor: pointer; }
+        .banner-tab[aria-selected="true"] { background: #ecedf3; color: #242439; border-color: white; }
+        .warp-art.lightcone-art { width: 50%; height: 76%; top: 15%; right: 8%; filter: drop-shadow(0 12px 30px #080720aa); }
+        .warp-featured.cones .warp-portrait { border-radius: 8px; }
+        .warp-featured.cones .warp-portrait img { width: 100%; height: 100%; left: 0; object-fit: cover; }
+        .illustration { position: relative; width: min(1200px, 96vw); height: 85vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .illustration-img { width: 90%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 40px #0008); }
+        .illustration.lightcone .illustration-img { width: 60%; height: 90%; }
+        .illustration-info { position: absolute; left: 6%; bottom: 10%; max-width: 80%; padding: 18px 24px; border-left: 3px solid currentColor; background: linear-gradient(90deg, #141323ed, #14132380); border-radius: 0 12px 12px 0; text-shadow: 0 2px 8px #000; }
+        .illustration-info h2 { margin: 6px 0; font-size: clamp(22px, 3.5vw, 42px); font-weight: 900; word-break: keep-all; }
+        .illustration-info p { color: #e2e0eb; font-size: 13px; margin: 6px 0 0; }
+        .illustration-stars { letter-spacing: 4px; font-size: 22px; }
+        #single-card-container .illustration { opacity: 0; }
+        .warp-character-name { max-width: 48vw; word-break: keep-all; }
+        #single-card-container:has(.illustration) + div { position: absolute; bottom: 3%; margin: 0; }
+        #art-viewer { position: fixed; inset: 0; z-index: 120; display: none; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, #312746, #070b16 80%); }
+        .art-viewer-close { position: absolute; top: 20px; right: 24px; z-index: 2; border: 1px solid #ffffff70; border-radius: 24px; background: #161525bb; color: white; padding: 10px 18px; cursor: pointer; font: inherit; }
+        @media (max-width: 600px) {
+            .banner-tab { font-size: 10px; padding: 7px 9px; }
+            .warp-character-name { max-width: 43vw; font-size: 18px; }
+            .warp-art.lightcone-art { width: 53%; height: 67%; right: 0; top: 17%; }
+            .illustration-info { left: 3%; bottom: 6%; padding: 12px 16px; }
+            .illustration-img { width: 100%; }
+            .illustration.lightcone .illustration-img { width: 92%; height: 80%; }
+        }
+        .rarity-header { font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem; margin-top: 1.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .collection-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid #334155; }
+        .collection-tools input, .collection-tools select { min-width: 0; border: 1px solid #475569; border-radius: 6px; background: #111b30; color: #fff; padding: 9px 12px; font: inherit; font-size: 13px; }
+        .collection-tools input { flex: 1; }
+        .collection-tools input:focus, .collection-tools select:focus { outline: 2px solid #54a2ff; outline-offset: 2px; }
+        .collection-count { font-size: 12px; color: #aab9cd; }
+        .collection-empty { padding: 40px 0; text-align: center; color: #94a3b8; }
+        .warp-panel { display: flex; flex-direction: column; }
+        .warp-tag { align-self: flex-start; }
+        .warp-details-button { align-self: flex-start; margin-top: auto; border: 1px solid #82778d; border-radius: 22px; background: #ffffffb0; padding: 9px 20px; color: #42394e; font: inherit; font-size: 13px; cursor: pointer; }
+        .warp-panel-note { margin-bottom: 24px; }
+        #warp-details { position: fixed; inset: 0; z-index: 110; display: none; align-items: center; justify-content: center; padding: 20px; background: #050814cc; backdrop-filter: blur(12px); }
+        .warp-details-box { display: flex; flex-direction: column; width: min(760px, 100%); max-height: 88vh; border: 1px solid #58627a; border-radius: 16px; background: #10192b; box-shadow: 0 20px 70px #0008; overflow: hidden; }
+        .warp-details-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid #334155; }
+        .warp-details-header h2 { font-weight: 700; font-size: 20px; }
+        .warp-details-header button { border: 0; background: transparent; color: #dce3ef; font: inherit; padding: 8px; cursor: pointer; }
+        .warp-details-tabs { display: flex; padding: 0 20px; border-bottom: 1px solid #334155; }
+        .warp-details-tabs button { flex: 1; padding: 15px 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #9aaac2; font: inherit; cursor: pointer; }
+        .warp-details-tabs button[aria-selected="true"] { border-color: #93c5fd; color: #fff; }
+        #warp-details-content { padding: 24px; overflow-y: auto; min-height: 0; }
+        .warp-details-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .warp-details-table th, .warp-details-table td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #334155; }
+        .warp-details-table th { color: #9cadc6; font-weight: 500; }
+        .warp-details-table td { color: #e2e8f0; }
+        .warp-details-note { color: #abb9cf; font-size: 12px; line-height: 1.9; margin: 14px 0; }
+        .warp-details-title { font-size: 15px; font-weight: 700; margin: 20px 0 10px; }
+        .warp-history-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; font-size: 12px; color: #b4c1d6; }
+        .warp-history-pagination button { border: 1px solid #475569; background: #1e293b; color: #e2e8f0; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+        .warp-history-pagination button:disabled { opacity: .4; cursor: default; }
+        .warp-history-time { font-size: 11px; white-space: nowrap; color: #aab9ce; }
+        @media (max-width: 520px) {
+            #warp-details { padding: 12px; }
+            #warp-details-content { padding: 16px; }
+            .warp-details-header { padding: 14px 16px; }
+            .warp-details-header h2 { font-size: 17px; }
+            .warp-details-table th, .warp-details-table td { padding: 10px 4px; font-size: 11px; }
+            .warp-history-time { font-size: 9px; white-space: normal; }
+        }
+        /* 캐릭터 이벤트 워프 */
+        #warp-screen { background: #171526; overflow: auto; justify-content: flex-start; }
+        .warp-header { position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 22px 32px; background: linear-gradient(#111222a6, transparent); }
+        .warp-back { border: 0; background: transparent; color: white; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+        .warp-back span { font-size: 26px; }
+        .warp-heading { font-size: 13px; letter-spacing: .2em; color: #ede6f6; }
+        .warp-stage { position: relative; width: 100%; flex: 1; min-height: 480px; overflow: hidden; isolation: isolate; background: radial-gradient(ellipse at 80% 30%, #a55f88 0, #48344f 35%, #1a1935 75%); }
+        .warp-stage::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: .6; background-image: radial-gradient(circle, #fff 1px, transparent 2px), radial-gradient(circle, #f2c9ef 1px, transparent 2px); background-size: 97px 89px, 163px 137px; background-position: 5px 13px, 48px 72px; }
+        .warp-orbit { position: absolute; width: 70vw; height: 70vw; right: -8%; top: -45%; border: 1px solid #f8c3e43b; border-radius: 50%; box-shadow: 0 0 0 45px #e8b5ff08, 0 0 0 110px #e8b5ff08; transform: rotate(-25deg); pointer-events: none; }
+        .warp-art { position: absolute; z-index: 1; width: 85%; height: 125%; right: -11%; top: -8%; object-fit: contain; filter: drop-shadow(0 12px 35px #130d35aa); pointer-events: none; }
+        .warp-panel { position: relative; z-index: 2; width: 32%; max-width: 440px; min-height: 100%; padding: 102px 32px 42px; color: #252530; background: linear-gradient(160deg, #fffffff5 5%, #eeedf8f2 60%, #b8a8cbeb); border-radius: 0 100px 0 0; box-shadow: 8px 0 0 #fff2, 14px 0 30px #17112640; }
+        .warp-panel::before { content: '✧'; position: absolute; font-size: 260px; top: 16%; left: -90px; color: #a6a1bd16; pointer-events: none; }
+        .warp-tag { display: inline-block; margin-left: -32px; padding: 7px 22px 7px 32px; background: #397ca9; color: white; border-radius: 0 24px 24px 0; font-size: 14px; font-weight: 700; box-shadow: 0 3px 0 #bed9ed; }
+        .warp-title { position: relative; margin: 28px 0 14px; font-size: clamp(30px, 3.6vw, 58px); line-height: 1.2; font-weight: 900; letter-spacing: -.06em; word-break: keep-all; }
+        .warp-subtitle { font-size: 13px; font-weight: 700; line-height: 1.9; word-break: keep-all; }
+        .warp-rate { color: #86522f; }
+        .warp-featured { display: flex; gap: 12px; margin: 42px 0 24px; }
+        .warp-portrait { position: relative; flex: 1; min-width: 0; height: clamp(145px, 24vh, 245px); overflow: hidden; border-radius: 60px; border: 2px solid #fff9; background: linear-gradient(#f4e9d3, #b6a3c3); box-shadow: 0 5px 12px #4b426020; }
+        .warp-portrait img { width: 330%; max-width: none; height: 125%; object-fit: cover; object-position: center top; position: absolute; left: -115%; top: 0; }
+        .warp-portrait span { position: absolute; bottom: 0; left: 0; width: 100%; padding: 22px 0 16px; background: linear-gradient(transparent, #221b3cda); text-align: center; font-size: 12px; font-weight: 700; color: white; }
+        .warp-panel-note { font-size: 11px; line-height: 1.8; color: #595269; }
+        .warp-character { position: absolute; left: 40%; bottom: 11%; z-index: 3; }
+        .warp-character-name { background: #251d38c9; padding: 5px 22px; border-left: 3px solid #d6b1e8; font-size: 30px; font-weight: 700; backdrop-filter: blur(8px); }
+        .warp-character-stars { display: inline-block; background: #251d38ba; padding: 0 22px 5px; color: #f8d58a; font-size: 23px; letter-spacing: 4px; }
+        .warp-character-path { font-size: 12px; margin-top: 10px; color: #e9dbef; letter-spacing: .2em; text-shadow: 0 2px 4px #000; }
+        .warp-footer { width: 100%; z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 22px 32px; background: linear-gradient(100deg, #e7e3edf5, #f6f3f7); color: #323044; border-top: 1px solid #fff9; }
+        .warp-pity { display: flex; gap: 30px; }
+        .warp-pity-item { font-size: 12px; color: #6e6678; }
+        .warp-pity-item strong { color: #3a314a; font-size: 22px; margin-left: 10px; }
+        .warp-guaranteed { height: 17px; font-size: 10px; color: #8a5a32; margin-top: 4px; transition: opacity .2s; }
+        .warp-actions { display: flex; gap: 14px; }
+        .warp-pull { min-width: 180px; border: 1px solid #c0b7a8; border-radius: 30px; padding: 12px 25px; background: #fff9; color: #38333f; font: inherit; font-weight: 700; cursor: pointer; transition: transform .2s, box-shadow .2s; box-shadow: inset 0 0 0 3px #fff9; }
+        .warp-pull:hover { transform: translateY(-2px); box-shadow: 0 4px 16px #55416325; }
+        .warp-pull.ten { background: #e7d7b4; border-color: #b49b6a; }
+        .warp-pull small { display: block; font-size: 10px; font-weight: 500; color: #786e64; margin-top: 2px; }
+        .warp-back:focus-visible, .warp-pull:focus-visible { outline: 3px solid #70a8d4; outline-offset: 4px; }
+        @media (max-width: 900px) {
+            .warp-panel { width: 38%; padding-left: 22px; padding-right: 22px; }
+            .warp-tag { margin-left: -22px; padding-left: 22px; font-size: 12px; }
+            .warp-featured { gap: 7px; }
+            .warp-footer { padding: 18px 22px; gap: 16px; }
+            .warp-pity { gap: 16px; }
+            .warp-pity-item strong { display: block; margin-left: 0; }
+            .warp-pull { min-width: 145px; }
+        }
+        @media (max-width: 600px) {
+            .warp-header { padding: 14px 18px; }
+            .warp-heading { font-size: 10px; }
+            .warp-stage { flex: 1 0 auto; min-height: 580px; }
+            .warp-panel { width: 49%; padding: 78px 16px 24px; border-top-right-radius: 60px; }
+            .warp-tag { margin-left: -16px; padding-left: 16px; padding-right: 12px; font-size: 10px; }
+            .warp-title { font-size: 32px; margin-top: 24px; }
+            .warp-subtitle { font-size: 11px; }
+            .warp-featured { margin-top: 30px; gap: 5px; }
+            .warp-portrait { height: 160px; }
+            .warp-portrait span { font-size: 10px; }
+            .warp-art { width: 115%; height: 100%; right: -40%; top: 0; }
+            .warp-character { left: 53%; bottom: 9%; }
+            .warp-character-name { font-size: 23px; padding: 5px 12px; }
+            .warp-character-stars { padding: 0 10px 4px; font-size: 18px; }
+            .warp-character-path { font-size: 10px; letter-spacing: .05em; }
+            .warp-footer { flex-direction: column; align-items: stretch; padding: 16px; gap: 12px; }
+            .warp-pity { justify-content: space-between; }
+            .warp-pity-item strong { display: inline; font-size: 19px; margin-left: 5px; }
+            .warp-actions { gap: 10px; }
+            .warp-pull { flex: 1; min-width: 0; padding: 10px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <section id="profile-login-screen" aria-labelledby="profile-login-title">
+        <form id="profile-login-form" class="profile-login-card">
+            <p class="font-orbitron">Honkai: Star Rail</p>
+            <h1 id="profile-login-title">아이디로 접속</h1>
+            <p>같은 아이디로 접속하면 워프 기록, 획득 목록과 저장한 유물 세팅을 불러옵니다.</p>
+            <label for="profile-login-id">저장용 아이디</label>
+            <input id="profile-login-id" type="text" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="아이디 입력" required>
+            <button type="submit">접속하기 →</button>
+            <p id="profile-login-error" role="alert"></p>
+            <p>이 브라우저 안에서 사용하는 저장용 아이디입니다. 영문 대소문자는 구분하지 않습니다. 비밀번호 없이 같은 아이디의 데이터를 열 수 있으며, 다른 기기·브라우저와는 연동되지 않습니다.</p>
+        </form>
+    </section>
+    <script src="assets/profile-storage.js"></script>
+    <div id="app-content" inert>
+    <div id="bg-stars"></div>
+
+    <!-- 1. 메인 로비 화면 (신규 추가) -->
+    <div id="lobby-screen" class="screen flex-col justify-center items-center p-4 md:p-8">
+        <div class="profile-account"><span id="profile-current-id"></span><button id="profile-change" type="button">아이디 변경</button></div>
+        <h1 class="font-orbitron text-4xl md:text-5xl font-black mb-10 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-white to-blue-300 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+            Honkai: Star Rail
+        </h1>
+        
+        <div class="lobby-layout">
+            
+            <!-- 캐릭터와 광추 픽업에 각각 진입 -->
+            <button id="lobby-pickup-character" type="button" onclick="goToWarpScreen('character')" class="lobby-pickup" aria-label="창해에서 맺은 진주 캐릭터 픽업 입장">
+                <img id="lobby-art-character" src="assets/character-art/1503.png" alt="펄">
+                <div class="lobby-pickup-copy">
+                    <small id="lobby-tag-character" class="font-orbitron">캐릭터 이벤트 워프</small>
+                    <h2 id="lobby-title-character">창해에서 맺은 진주 ↗</h2>
+                    <p id="lobby-description-character">★5 펄 · 환락 · 얼음<br>캐릭터 이벤트 워프</p>
+                </div>
+            </button>
+            <button id="lobby-pickup-lightcone" type="button" onclick="goToWarpScreen('lightcone')" class="lobby-pickup cone" aria-label="세월의 응고 광추 픽업 입장">
+                <img id="lobby-art-lightcone" src="assets/lightcone-art/23055.png" alt="내일에 바치는 색채">
+                <div class="lobby-pickup-copy">
+                    <small id="lobby-tag-lightcone" class="font-orbitron">광추 이벤트 워프</small>
+                    <h2 id="lobby-title-lightcone">세월의 응고 ↗</h2>
+                    <p id="lobby-description-lightcone">★5 내일에 바치는 색채<br>광추 이벤트 워프</p>
+                </div>
+            </button>
+            <!-- 우측 사이드 메뉴 -->
+            <div class="lobby-menu flex-1 flex flex-col gap-4">
+                <button onclick="openCollection()" class="flex-1 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 border-2 border-gray-700 hover:border-blue-400 flex flex-col items-center justify-center text-xl md:text-2xl font-bold transition-all shadow-lg group">
+                    <span class="text-4xl mb-2 group-hover:-translate-y-1 transition-transform">📖</span>
+                    <span class="text-gray-200 group-hover:text-white">도감 (Collection)</span>
+                </button>
+                <button id="relic-lobby-button" onclick="openRelicCalculator()" class="flex-1 rounded-2xl bg-gradient-to-br from-teal-900 to-gray-900 border-2 border-teal-700 hover:border-cyan-300 flex flex-col items-center justify-center text-xl md:text-2xl font-bold transition-all shadow-lg group">
+                    <span class="text-4xl mb-2 group-hover:-translate-y-1 transition-transform">✧</span>
+                    <span>유물 종결 계산기</span>
+                    <small class="text-xs text-teal-200 mt-2">준종결 → 종결 평가 · 세팅 저장</small>
+                </button>
+                <button id="team-lobby-button" onclick="openTeamBuilder()" class="flex-1 rounded-2xl bg-gradient-to-br from-purple-900 to-gray-900 border-2 border-purple-700 hover:border-purple-300 flex flex-col items-center justify-center text-xl md:text-2xl font-bold transition-all shadow-lg group">
+                    <span class="text-4xl mb-2 group-hover:-translate-y-1 transition-transform">◇</span>
+                    <span>파티 시너지 빌더</span>
+                    <small class="text-xs text-purple-200 mt-2">딜러별 조합 추천 · 내 파티 저장</small>
+                </button>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- 2. 캐릭터 이벤트 워프 화면 -->
+    <div id="warp-screen" class="screen">
+        <header class="warp-header">
+            <button onclick="goToLobby()" class="warp-back" aria-label="로비로 돌아가기"><span aria-hidden="true">‹</span> 워프</button>
+            <span id="warp-pickup-label" class="warp-heading">창해에서 맺은 진주</span>
+        </header>
+        <div class="warp-banner-picker">
+            <div class="banner-tabs" role="tablist" aria-label="워프 종류">
+                <button class="banner-tab" id="warp-type-character" role="tab" aria-selected="true" onclick="selectBanner('character')">캐릭터 픽업</button>
+                <button class="banner-tab" id="warp-type-lightcone" role="tab" aria-selected="false" onclick="selectBanner('lightcone')">광추 픽업</button>
+            </div>
+            <span id="warp-banner-picker-label">한정 ★5 배너 선택</span>
+            <button type="button" id="warp-banner-select" class="warp-banner-current" onclick="openBannerPicker()" aria-haspopup="dialog" aria-controls="warp-banner-dialog" aria-labelledby="warp-banner-picker-label warp-banner-current-name"></button>
+        </div>
+        <dialog id="warp-banner-dialog" class="warp-banner-dialog" aria-labelledby="warp-banner-dialog-title" onclick="if(event.target===this)closeBannerPicker()">
+            <header class="warp-banner-dialog-header">
+                <div><small>한정 ★★★★★</small><h2 id="warp-banner-dialog-title">픽업 선택</h2></div>
+                <button type="button" onclick="closeBannerPicker()" aria-label="배너 선택창 닫기">✕</button>
+            </header>
+            <label class="warp-banner-search-label" for="warp-banner-search">이름 또는 배너명 검색</label>
+            <input id="warp-banner-search" type="search" placeholder="캐릭터·광추·배너 이름 검색" oninput="renderBannerChoices(this.value)" autocomplete="off" autofocus>
+            <p id="warp-banner-count" class="warp-banner-count" aria-live="polite"></p>
+            <div id="warp-banner-grid" class="warp-banner-grid"></div>
+        </dialog>
+        <div class="warp-stage">
+            <div class="warp-orbit" aria-hidden="true"></div>
+            <img id="warp-banner-art" class="warp-art" src="assets/character-art/1503.png" alt="펄 캐릭터 일러스트">
+            <section class="warp-panel" aria-labelledby="warp-banner-title">
+                <div id="warp-banner-tag" class="warp-tag">캐릭터 이벤트 워프</div>
+                <h1 id="warp-banner-title" class="warp-title">창해에서 맺은 진주</h1>
+                <p id="warp-banner-subtitle" class="warp-subtitle">★5 캐릭터 「펄 · 환락 · 얼음」<br><span class="warp-rate">출현 확률 UP!</span></p>
+                <div id="warp-banner-featured" class="warp-featured" aria-label="4성 픽업 캐릭터">
+                    <div class="warp-portrait"><img src="assets/misha.png" alt="미샤"><span>미샤</span></div>
+                    <div class="warp-portrait"><img src="assets/xueyi.png" alt="설의"><span>설의</span></div>
+                    <div class="warp-portrait"><img src="assets/qingque.png" alt="청작"><span>청작</span></div>
+                </div>
+                <p id="warp-banner-note" class="warp-panel-note">이벤트 기간 한정 캐릭터 확률 증가<br>10회 워프 시 ★4 이상의 캐릭터 또는 광추 확정</p>
+                <button id="warp-details-open" class="warp-details-button" onclick="openWarpDetails()">ⓘ 상세보기</button>
+            </section>
+            <div class="warp-character">
+                <div id="warp-banner-name" class="warp-character-name">✧ 펄</div>
+                <div class="warp-character-stars" aria-label="5성">★★★★★</div>
+                <div id="warp-banner-path" class="warp-character-path">환락 / 얼음</div>
+            </div>
+        </div>
+        <footer class="warp-footer">
+            <div class="warp-pity" aria-live="polite">
+                <div class="warp-pity-item">5성 천장 <strong><span id="ui-pity5">0</span> <small id="ui-pity5-limit">/ 90</small></strong><p id="ui-guaranteed5" class="warp-guaranteed" style="opacity: 0">다음 5성 픽업 확정!</p></div>
+                <div class="warp-pity-item">4성 천장 <strong><span id="ui-pity4">0</span> <small>/ 10</small></strong><p id="ui-guaranteed4" class="warp-guaranteed" style="opacity: 0">다음 4성 픽업 확정!</p></div>
+            </div>
+            <div class="warp-actions">
+                <button onclick="doWarp(1)" class="warp-pull">워프 1회<small>✦ × 1</small></button>
+                <button onclick="doWarp(10)" class="warp-pull ten">워프 10회<small>✦ × 10</small></button>
+            </div>
+        </footer>
+    </div>
+    <!-- 3. 애니메이션 연출 화면 -->
+    <div id="anim-screen" class="screen" aria-label="차원 항로 워프 연출">
+        <canvas id="warp-space" aria-hidden="true"></canvas>
+        <div id="warp-cinema" class="warp-cinema" data-stage="arrival">
+            <div class="warp-sigil" aria-hidden="true"></div>
+            <div class="warp-orbits" aria-hidden="true"><div class="warp-orbit"></div><div class="warp-orbit"></div><div class="warp-orbit"></div></div>
+            <div class="warp-core" aria-hidden="true"></div>
+            <div class="warp-pass" aria-hidden="true"><small>ASTRAL EXPRESS / WARP</small><strong>개척의 표식</strong><span>✧</span></div>
+            <div class="warp-rift" aria-hidden="true"></div>
+            <div class="warp-cinema-caption"><small>BEYOND THE STARS</small><p id="warp-cinema-title" role="status">새로운 항로를 향해</p><p id="warp-cinema-subtitle">별빛 속에서 운명이 기다립니다</p></div>
+            <button id="warp-signal-open" class="warp-signal-open" type="button" hidden aria-label="신호를 열어 워프 연출 계속하기"><span>화면을 클릭해 신호 열기 <small>CLICK / TAP</small></span></button>
+        </div>
+    </div>
+
+    <!-- 4. 단일 결과 순차 공개 화면 (클릭하여 진행) -->
+    <div id="single-reveal-screen" class="screen" onclick="nextReveal()">
+        <div id="single-card-container"></div>
+        <div class="mt-12 text-gray-400 animate-pulse font-bold tracking-widest text-sm bg-black/50 px-6 py-2 rounded-full backdrop-blur-md">
+            화면을 클릭하여 계속...
+        </div>
+    </div>
+
+    <!-- 5. 최종 결과 요약창 화면 -->
+    <div id="result-screen" class="screen">
+        <h2 class="font-orbitron text-3xl font-bold mb-8 tracking-widest text-white drop-shadow-md">WARP SUMMARY</h2>
+        <div id="cards-container" class="cards-grid"></div>
+        <button onclick="resetToWarp()" class="mt-12 btn px-12 py-3 rounded-full font-orbitron font-bold text-lg text-white">
+            확인
+        </button>
+    </div>
+
+    <!-- 6. 도감 모달 -->
+    <div id="collection-modal">
+        <div class="collection-box">
+            <div class="flex">
+                <div id="tab-character" class="tab-btn active" onclick="switchTab('character')">캐릭터 도감</div>
+                <div id="tab-lightcone" class="tab-btn" onclick="switchTab('lightcone')">광추 도감</div>
+            </div>
+            <div class="collection-tools">
+                <input id="collection-search" type="search" placeholder="이름으로 검색" aria-label="도감 이름 검색" oninput="renderCollection()">
+                <select id="collection-rarity" aria-label="도감 등급 필터" onchange="renderCollection()">
+                    <option value="all">모든 등급</option>
+                    <option value="5">★5</option>
+                    <option value="4">★4</option>
+                    <option value="3">★3</option>
+                </select>
+                <span id="collection-count" class="collection-count" aria-live="polite"></span>
+            </div>
+            <div class="collection-content">
+                <div id="collection-render-area"></div>
+            </div>
+            <div class="bg-gray-900 border-t border-gray-700 p-4 flex justify-center">
+                <button onclick="closeCollection()" class="btn px-10 py-2 rounded-lg text-white font-bold">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="warp-details" role="dialog" aria-modal="true" aria-labelledby="warp-details-heading" onclick="if (event.target === this) closeWarpDetails()">
+        <div class="warp-details-box">
+            <header class="warp-details-header"><h2 id="warp-details-heading">상세보기</h2><button id="warp-details-close" onclick="closeWarpDetails()" aria-label="상세보기 닫기">✕</button></header>
+            <div class="warp-details-tabs" role="tablist" aria-label="상세보기 항목">
+                <button id="warp-tab-rates" role="tab" aria-selected="true" aria-controls="warp-details-content" onclick="selectWarpDetailsTab('rates')">확률 안내</button>
+                <button id="warp-tab-history" role="tab" aria-selected="false" aria-controls="warp-details-content" onclick="selectWarpDetailsTab('history')">워프 기록</button>
+            </div>
+            <div id="warp-details-content" role="tabpanel" aria-labelledby="warp-tab-rates" tabindex="0"></div>
+        </div>
+    </div>
+
+    <div id="art-viewer" role="dialog" aria-modal="true" aria-label="도감 일러스트 확대" onclick="if (event.target === this) closeArtViewer()">
+        <button id="art-viewer-close" class="art-viewer-close" onclick="closeArtViewer()">닫기 ✕</button>
+        <div id="art-viewer-content"></div>
+    </div>
+
+    <!-- 스킵 버튼 (기본 숨김, 애니메이션 및 개별 공개 시 표시) -->
+    <button id="skip-btn" onclick="handleSkip()" style="display: none;" class="absolute top-6 right-6 z-[100] bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md px-5 py-2 rounded-full font-orbitron font-bold text-white tracking-widest transition-all">
+        SKIP ⏩
+    </button>
+
+    <div id="warp-beat-controls" class="warp-beat-controls" hidden>
+        <button id="warp-beat-toggle" type="button" aria-pressed="true">BGM ON</button>
+        <input id="warp-beat-volume" type="range" min="0" max="100" value="35" aria-label="워프 오디오 볼륨">
+        <span id="warp-beat-title" aria-live="polite"></span>
+    </div>
+    <script src="assets/warp-music-tracks.js"></script>
+    <script src="assets/warp-voice-lines.js"></script>
+    <script src="assets/warp-audio.js"></script>
+    <script src="assets/warp-cinematic.js"></script>
+    <script src="assets/warp-path-reveal.js"></script>
+    <script src="assets/light-cones.js"></script>
+    <script src="assets/characters.js"></script>
+    <script src="assets/warp-banner-data.js"></script>
+    <script>
+        const db = [
+            // [ 5성 캐릭터 ]
+            { name: "펄", rarity: 5, type: "character", isUp: true, image: "assets/characters/1503.png" },
+            { name: "웰트", rarity: 5, type: "character", isUp: false, image: "" },
+            { name: "은랑", rarity: 5, type: "character", isUp: false, image: "" },
+            { name: "브로냐", rarity: 5, type: "character", isUp: false, image: "" },
+            { name: "제레", rarity: 5, type: "character", isUp: false, image: "" },
+            { name: "블레이드", rarity: 5, type: "character", isUp: false, image: "" },
+            { name: "부현", rarity: 5, type: "character", isUp: false, image: "" },
+            { name: "운리", rarity: 5, type: "character", isUp: false, image: "" },
+
+            // [ 4성 캐릭터 ]
+            { name: "미샤", rarity: 4, type: "character", isUp: true, image: "assets/misha.png" },
+            { name: "설의", rarity: 4, type: "character", isUp: true, image: "assets/xueyi.png" },
+            { name: "청작", rarity: 4, type: "character", isUp: true, image: "assets/qingque.png" },
+            { name: "Mar. 7th", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "단항", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "아를란", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "아스타", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "헤르타", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "나타샤", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "서벌", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "페라", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "삼포", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "후크", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "소상", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "정운", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "어공", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "루카", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "링스", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "계네빈", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "한아", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "갤러거", rarity: 4, type: "character", isUp: false, image: "" },
+            { name: "맥택", rarity: 4, type: "character", isUp: false, image: "" },
+
+            // [ 4성 광추 ]
+            { name: "수술 후의 대화", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "밤 인사와 잠든 얼굴", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "여생의 첫날", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "침묵만이", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "기억 속 모습", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "두더지파가 환영해", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "「나」의 탄생", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "같은 심정", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "사냥감의 시선", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "랜도의 선택", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "논검", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "행성과의 만남", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "비밀 맹세", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "세상을 진정시키지 마", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "알맞은 타이밍", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "땀방울처럼 빛나는 결심", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "우주 시장 동향", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "팔로우를 부탁해!", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "댄스! 댄스! 댄스!", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "푸른 하늘 아래", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "천재들의 휴식", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "마음에 새긴 약속", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "두 사람의 콘서트", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "끝없는 춤", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "조화가 침묵한 후", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "피어나길 기다리는 꽃", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "그림자처럼 뒤따르는 밤", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "꿈의 몽타주", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "천재들의 안부 인사", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "이야기의 다음 페이지", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            { name: "짧은 휴가", rarity: 4, type: "lightcone", isUp: false, image: "" },
+
+            // [ 3성 광추 ]
+            { name: "화살촉", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "풍작", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "천경", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "앰버", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "그윽", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "합창", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "아카이브", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "시위를 떠난 화살", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "알찬 열매", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "무너진 행복", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "수비", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "심연의 고리", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "맞물린 톱니", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "영험한 열쇠", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "대립", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "증식", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "전멸", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "강토 개척", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "숨은 그림자", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "어울림", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "식견", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "불타는 그림자", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "추억 회상", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "비웃음", rarity: 3, type: "lightcone", isUp: false, image: "" },
+            { name: "눈물의 흔적", rarity: 3, type: "lightcone", isUp: false, image: "" }
+        ];
+
+        // 도감 전체 목록은 픽업의 뽑기 대상과 독립적으로 관리한다.
+        const lightConesByName = new Map(lightConeCatalog.map(item => [item.name, item]));
+        db.forEach(item => {
+            if (item.type === 'lightcone') item.image = lightConesByName.get(item.name)?.image || '';
+            if (item.type === 'character') {
+                const character = characterCatalog.find(entry => entry.name === item.name);
+                if (character) {
+                    item.id = character.id;
+                    item.image = item.image || character.image;
+                }
+            }
+        });
+        const collectionItems = [...characterCatalog, ...lightConeCatalog];
+        characterCatalog.forEach(item => { item.portrait = `assets/character-art/${item.id}.png`; });
+        lightConeCatalog.forEach(item => { item.portrait = item.rarity >= 4 ? `assets/lightcone-art/${item.id}.png` : item.image; });
+        db.forEach(item => {
+            const entry = item.type === 'character' ? characterCatalog.find(c => c.id === item.id) : lightConesByName.get(item.name);
+            if (entry) Object.assign(item, { id: entry.id, portrait: entry.portrait, path: entry.path, pathName: entry.pathName, element: entry.element, elementName: entry.elementName });
+        });
+
+        // 동명 캐릭터의 다른 운명의 길은 각각의 획득 상태를 갖는다.
+        function getInventoryKey(item) {
+            return item.type === 'character' && item.id ? `character:${item.id}` : item.name;
+        }
+
+        const pool5_up = db.filter(item => item.rarity === 5 && item.isUp);
+        const pool5_std = db.filter(item => item.rarity === 5 && !item.isUp);
+        const pool4_up = db.filter(item => item.rarity === 4 && item.isUp);
+        const pool4_std = db.filter(item => item.rarity === 4 && !item.isUp);
+        const pool3 = db.filter(item => item.rarity === 3);
+
+        const pearl = characterCatalog.find(item => item.id === '1503');
+        const pearlCone = lightConeCatalog.find(item => item.id === '23055');
+        const coneUp4 = ['21000', '21001', '21002'].map(id => lightConeCatalog.find(item => item.id === id));
+        const banners = {
+            character: { featured: pearl, maxPity: 90, softPity: 73, softStep: .06, base5: .006, base4: .051, rateUp: .5, rateUp4: .5, pool5: ['1003','1004','1101','1104','1107','1209','1211'].map(id=>characterCatalog.find(c=>c.id===id)), pool4Up: pool4_up, pool4: pool4_std },
+            lightcone: { featured: pearlCone, maxPity: 80, softPity: 63, softStep: .07, base5: .008, base4: .066, rateUp: .75, rateUp4: .75,
+                pool5: ['23000', '23002', '23003', '23004', '23005', '23012', '23013'].map(id => lightConeCatalog.find(item => item.id === id)),
+                pool4Up: coneUp4, pool4: db.filter(item => item.rarity === 4 && !coneUp4.some(cone => cone.name === item.name)) }
+        };
+        banners.character.title = '창해에서 맺은 진주';
+        banners.lightcone.title = '세월의 응고';
+        const pickupChoices = {
+            character: WarpBannerCatalog.characters.map(entry=>({...entry,featured:characterCatalog.find(item=>item.id===entry.id)})).filter(entry=>entry.featured),
+            lightcone: WarpBannerCatalog.lightcones.map(entry=>({...entry,featured:lightConeCatalog.find(item=>item.id===entry.id)})).filter(entry=>entry.featured)
+        };
+        const selectedPickups = {character:'1503',lightcone:'23055'};
+        let activeBanner = 'character';
+        let activeStateKey = 'character';
+        const warpStateKeys = ['character','lightcone','characterCollaboration','lightconeCollaboration'];
+        function getBannerStateKey(type) {
+            return type + (pickupChoices[type].find(entry=>entry.id===selectedPickups[type])?.collaboration ? 'Collaboration' : '');
+        }
+        const bannerStates = {
+            characterCollaboration: { pity5: 0, pity4: 0, guaranteed5: false, guaranteed4: false },
+            lightconeCollaboration: { pity5: 0, pity4: 0, guaranteed5: false, guaranteed4: false },
+            character: { pity5: 0, pity4: 0, guaranteed5: false, guaranteed4: false },
+            lightcone: { pity5: 0, pity4: 0, guaranteed5: false, guaranteed4: false }
+        };
+
+        let pity5 = 0; let pity4 = 0;
+        let guaranteed5 = false; let guaranteed4 = false;
+        let userInventory = {}; 
+
+        let isWarping = false; 
+        let revealQueue = [];
+        let currentRevealIdx = 0;
+        const progressStorageKey = 'warp';
+        let warpHistory = { character: [], lightcone: [], characterCollaboration: [], lightconeCollaboration: [] };
+        let progressStorageAvailable = true;
+        function loadWarpProgress() {
+            selectedPickups.character='1503';selectedPickups.lightcone='23055';
+            for (const type of warpStateKeys) bannerStates[type] = {pity5:0,pity4:0,guaranteed5:false,guaranteed4:false};
+            activeBanner='character';activeStateKey='character';
+            pity5=0;pity4=0;guaranteed5=false;guaranteed4=false;
+            userInventory={};warpHistory={character:[],lightcone:[],characterCollaboration:[],lightconeCollaboration:[]};historyPage=0;
+            progressStorageAvailable=true;
+            try {
+            const saved = JSON.parse(HonkaiProfileStorage.getItem(progressStorageKey) || 'null');
+            if (saved?.version === 1) {
+                for (const type of warpStateKeys) {
+                    const state = saved.bannerStates?.[type];
+                    if (state && Number.isInteger(state.pity5) && state.pity5 >= 0 && state.pity5 < banners[type.replace("Collaboration","")].maxPity && Number.isInteger(state.pity4) && state.pity4 >= 0 && state.pity4 < 10) {
+                        bannerStates[type] = { pity5: state.pity5, pity4: state.pity4, guaranteed5: !!state.guaranteed5, guaranteed4: !!state.guaranteed4 };
+                    }
+                    if (Array.isArray(saved.history?.[type])) {
+                        warpHistory[type] = saved.history[type].filter(entry => typeof entry.name === 'string' && [3, 4, 5].includes(entry.rarity) && Number.isFinite(Date.parse(entry.time)));
+                    }
+                }
+                if (saved.inventory && typeof saved.inventory === 'object' && !Array.isArray(saved.inventory)) {
+                    userInventory = Object.fromEntries(Object.entries(saved.inventory).filter(([key, value]) => key !== '__proto__' && key !== 'constructor' && Number.isInteger(value) && value > 0).map(([key]) => [key, 1]));
+                }
+                for(const type of ['character','lightcone'])if(pickupChoices[type].some(entry=>entry.id===saved.selectedPickups?.[type]))selectedPickups[type]=saved.selectedPickups[type];
+                activeStateKey=getBannerStateKey(activeBanner);
+                ({ pity5, pity4, guaranteed5, guaranteed4 } = bannerStates[activeStateKey]);
+            }
+            } catch { progressStorageAvailable=false; }
+            selectBanner(activeBanner);
+        }
+        globalThis.addEventListener('honkai-profile-login',loadWarpProgress);
+
+        function saveWarpProgress() {
+            if (!HonkaiProfileStorage.id) return;
+            bannerStates[activeStateKey] = { pity5, pity4, guaranteed5, guaranteed4 };
+            try {
+                HonkaiProfileStorage.setItem(progressStorageKey, JSON.stringify({ version: 1, bannerStates, selectedPickups, history: warpHistory, inventory: userInventory }));
+                progressStorageAvailable = true;
+            } catch { progressStorageAvailable = false; }
+        }
+
+        function getWarpProbabilities() {
+            const banner = banners[activeBanner];
+            let five = banner.base5;
+            if (pity5 >= banner.softPity) five += banner.softStep * (pity5 - banner.softPity + 1);
+            if (pity5 >= banner.maxPity - 1) five = 1;
+            five = Math.min(1, Math.max(0, five));
+            const four = Math.min(1 - five, pity4 >= 9 ? 1 : banner.base4);
+            return { five, four, three: Math.max(0, 1 - five - four) };
+        }
+
+        let detailsTab = 'rates';
+        const historyPageSize = 10;
+        let historyPage = 0;
+        let detailsPreviousFocus = null;
+        function openWarpDetails() {
+            if (isWarping) return;
+            detailsPreviousFocus = document.activeElement;
+            document.getElementById('warp-details-heading').textContent = banners[activeBanner].title;
+            document.getElementById('warp-details').style.display = 'flex';
+            historyPage = 0;
+            selectWarpDetailsTab('rates');
+            document.getElementById('warp-details-close').focus();
+        }
+        function closeWarpDetails() {
+            document.getElementById('warp-details').style.display = 'none';
+            detailsPreviousFocus?.focus();
+        }
+        function selectWarpDetailsTab(tab) {
+            if (!['rates', 'history'].includes(tab)) return;
+            detailsTab = tab;
+            for (const type of ['rates', 'history']) document.getElementById(`warp-tab-${type}`).setAttribute('aria-selected', String(type === tab));
+            document.getElementById('warp-details-content').setAttribute('aria-labelledby', `warp-tab-${tab}`);
+            renderWarpDetails();
+        }
+        function changeHistoryPage(delta) {
+            const pages = Math.max(1, Math.ceil(warpHistory[activeStateKey].length / historyPageSize));
+            historyPage = Math.max(0, Math.min(pages - 1, historyPage + delta));
+            renderWarpDetails();
+        }
+        function renderWarpDetails() {
+            const container = document.getElementById('warp-details-content');
+            const banner = banners[activeBanner];
+            const percent = value => `${(value * 100).toFixed(2)}%`;
+            if (detailsTab === 'rates') {
+                const probability = getWarpProbabilities();
+                container.innerHTML = `<p class="warp-details-note">이 시뮬레이터에 적용된 확률입니다. 현재 천장 진행도에 따라 다음 워프의 확률이 달라집니다.</p>
+                    <table class="warp-details-table"><thead><tr><th scope="col">등급</th><th scope="col">기본 확률</th><th scope="col">다음 워프 확률</th></tr></thead><tbody>
+                    <tr><td>★5</td><td>${percent(banner.base5)}</td><td>${percent(probability.five)}</td></tr>
+                    <tr><td>★4</td><td>${percent(banner.base4)}</td><td>${percent(probability.four)}</td></tr>
+                    <tr><td>★3</td><td>${percent(1 - banner.base5 - banner.base4)}</td><td>${percent(probability.three)}</td></tr></tbody></table>
+                    <h3 class="warp-details-title">픽업 및 천장 안내</h3>
+                    <p class="warp-details-note">★5 획득 시 「${escapeHTML(banner.featured.name)}」 픽업 확률: ${percent(guaranteed5 ? 1 : banner.rateUp)}<br>
+                    ★4 획득 시 픽업 대상 확률: ${banner.collaboration ? '픽업 없음' : percent(guaranteed4 ? 1 : banner.rateUp4)}<br>
+                    픽업 대상이 나오지 않으면 다음 같은 등급 획득 시 픽업 대상이 확정됩니다.<br>
+                    ★5: 최대 ${banner.maxPity}회 확정 · 현재 ${pity5}회<br>★4 이상: 최대 10회 확정 · 현재 ${pity4}회<br>
+                    ★5 확률은 ${banner.softPity + 1}번째 워프부터 회당 ${(banner.softStep * 100).toFixed(0)}%p씩 증가합니다.<br>
+                    캐릭터와 광추의 천장·확정 상태는 각각 유지되며, 콜라보는 이벤트 워프와 따로 계산합니다.</p>
+                    <h3 class="warp-details-title">픽업 대상</h3><p class="warp-details-note">★5: ${escapeHTML(banner.featured.name)}<br>★4: ${banner.pool4Up.map(item => escapeHTML(item.name)).join(' · ') || '픽업 없음'}</p>
+                    <h3 class="warp-details-title">픽업 외 ★5 대상</h3><p class="warp-details-note">${banner.pool5.map(item => escapeHTML(item.name)).join(' · ')}</p>`;
+            } else {
+                const records = warpHistory[activeStateKey];
+                const pages = Math.max(1, Math.ceil(records.length / historyPageSize));
+                historyPage = Math.min(historyPage, pages - 1);
+                const entries = records.slice().reverse().slice(historyPage * historyPageSize, (historyPage + 1) * historyPageSize);
+                const rows = entries.map((entry, index) => {
+                    const date = new Date(entry.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                    return `<tr><td>${records.length - historyPage * historyPageSize - index}</td><td><span class="text-${entry.rarity}star">${escapeHTML(entry.name)}</span>${entry.featured ? ' <small>UP</small>' : ''}${entry.bannerTitle ? '<small class="warp-history-banner">'+escapeHTML([...pickupChoices.character,...pickupChoices.lightcone].find(choice=>choice.id===entry.bannerId)?.title || entry.bannerTitle)+'</small>' : ''}</td><td>★${entry.rarity}</td><td class="warp-history-time">${escapeHTML(date)}</td></tr>`;
+                }).join('');
+                container.innerHTML = `<p class="warp-details-note">${escapeHTML(banner.title)} · 총 ${records.length}회<br>이 브라우저에서 진행한 기록을 최신순으로 표시합니다.${progressStorageAvailable ? '' : '<br>기록을 저장할 수 없어 이 페이지를 닫으면 사라집니다.'}</p>` + (entries.length ?
+                    `<table class="warp-details-table"><thead><tr><th scope="col">회차</th><th scope="col">획득 항목</th><th scope="col">등급</th><th scope="col">시간 (한국)</th></tr></thead><tbody>${rows}</tbody></table>
+                    <div class="warp-history-pagination"><button onclick="changeHistoryPage(-1)" ${historyPage === 0 ? 'disabled' : ''}>이전</button><span>${historyPage + 1} / ${pages}</span><button onclick="changeHistoryPage(1)" ${historyPage === pages - 1 ? 'disabled' : ''}>다음</button></div>` : '<p class="collection-empty">아직 워프 기록이 없습니다.</p>');
+            }
+            container.scrollTop = 0;
+        }
+        document.addEventListener('keydown', event => {
+            const modal = document.getElementById('warp-details');
+            if (modal.style.display !== 'flex') return;
+            if (event.key === 'Escape') { closeWarpDetails(); return; }
+            if (event.key === 'Tab') {
+                const targets = [...modal.querySelectorAll('button:not([disabled]), [tabindex="0"]')];
+                const first = targets[0], last = targets[targets.length - 1];
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+            }
+        });
+
+        function escapeHTML(value) {
+            return String(value).replace(/[&<>"']/g, char => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[char]));
+        }
+
+        function choosePickup(id) {
+            if(isWarping || !pickupChoices[activeBanner].some(entry=>entry.id===id))return;
+            selectedPickups[activeBanner]=id;
+            selectBanner(activeBanner);saveWarpProgress();
+            closeBannerPicker();
+        }
+        function updateLobbyPickups() {
+            for (const type of ['character','lightcone']) {
+                const choice = pickupChoices[type].find(entry=>entry.id===selectedPickups[type]) || pickupChoices[type][0];
+                const item = choice.featured;
+                const art = document.getElementById(`lobby-art-${type}`);
+                art.src = item.portrait || item.image;
+                art.alt = item.name;
+                const kind = type === 'character' ? '캐릭터' : '광추';
+                const warpName = `${kind} ${choice.collaboration ? '콜라보' : '이벤트'} 워프`;
+                document.getElementById(`lobby-pickup-${type}`).setAttribute('aria-label', `${item.name} · ${choice.title} ${kind} 픽업 입장`);
+                document.getElementById(`lobby-title-${type}`).textContent = `${choice.title} ↗`;
+                document.getElementById(`lobby-tag-${type}`).textContent = warpName;
+                const detail = type === 'character' ? [item.pathName,item.elementName].filter(Boolean).join(' · ') : '';
+                document.getElementById(`lobby-description-${type}`).innerHTML = `★5 ${escapeHTML(item.name)}${detail ? ' · '+escapeHTML(detail) : ''}<br>${escapeHTML(warpName)}`;
+            }
+        }
+        function openBannerPicker() {
+            if (isWarping) return;
+            document.getElementById('warp-banner-dialog-title').textContent = activeBanner === 'character' ? '캐릭터 픽업 선택' : '광추 픽업 선택';
+            document.getElementById('warp-banner-search').value = '';
+            renderBannerChoices();
+            document.getElementById('warp-banner-dialog').showModal();
+        }
+        function closeBannerPicker() {
+            const dialog = document.getElementById('warp-banner-dialog');
+            if (dialog.open) {
+                dialog.close();
+                document.getElementById('warp-banner-select').focus();
+            }
+        }
+        function renderBannerChoices(query = '') {
+            const term = query.trim().toLocaleLowerCase('ko-KR');
+            const choices = pickupChoices[activeBanner].filter(entry=>`${entry.featured.name} ${entry.title}`.toLocaleLowerCase('ko-KR').includes(term));
+            document.getElementById('warp-banner-count').textContent = `${choices.length}개 배너 · 이미지를 눌러 선택하세요`;
+            document.getElementById('warp-banner-grid').innerHTML = choices.length ? choices.map(entry=>{
+                const selected = entry.id === selectedPickups[activeBanner];
+                return `<button type="button" class="warp-banner-choice${activeBanner==='lightcone' ? ' cone' : ''}" aria-pressed="${selected}" onclick="choosePickup('${entry.id}')"><div class="warp-banner-choice-art"><img src="${escapeHTML(entry.featured.image)}" alt="" loading="lazy" decoding="async"><span>${selected ? '선택 중' : entry.collaboration ? '콜라보' : '★5 한정'}</span></div><strong>${escapeHTML(entry.featured.name)}</strong><small>${escapeHTML(entry.title)}</small></button>`;
+            }).join('') : '<p class="warp-banner-empty">검색 결과가 없습니다.</p>';
+        }
+        function selectBanner(type) {
+            if (isWarping || !banners[type]) return;
+            closeBannerPicker();
+            bannerStates[activeStateKey] = { pity5, pity4, guaranteed5, guaranteed4 };
+            activeBanner = type;
+            activeStateKey=getBannerStateKey(type);
+            ({ pity5, pity4, guaranteed5, guaranteed4 } = bannerStates[activeStateKey]);
+            const banner = banners[type];
+            const choice=pickupChoices[type].find(entry=>entry.id===selectedPickups[type])||pickupChoices[type][0];
+            banner.featured=choice.featured;banner.title=choice.title;banner.collaboration=!!choice.collaboration;
+            const catalog=type==='character' ? characterCatalog : lightConeCatalog;
+            const chosen4=(choice.up4||[]).map(id=>catalog.find(entry=>entry.id===id)).filter(entry=>entry?.rarity===4);
+            banner.pool4Up=choice.collaboration ? [] : (chosen4.length ? chosen4 : (type==='character' ? pool4_up : coneUp4));
+            banner.pool4=db.filter(entry=>entry.rarity===4&&!banner.pool4Up.some(up=>up.id===entry.id));
+            const picker=document.getElementById('warp-banner-select');
+            picker.innerHTML=`<img src="${escapeHTML(choice.featured.image)}" alt=""><span><strong id="warp-banner-current-name">${escapeHTML(choice.featured.name)}</strong><small>${escapeHTML(choice.title)}</small></span><span aria-hidden="true">▦</span>`;
+            for(const tabType of ['character','lightcone'])document.getElementById(`warp-type-${tabType}`).setAttribute('aria-selected',String(tabType===type));
+            const item = banner.featured;
+            const isCone = type === 'lightcone';
+            document.getElementById('warp-pickup-label').textContent = banner.title;
+            const art = document.getElementById('warp-banner-art');
+            art.src = item.portrait;
+            art.alt = `${item.name} 일러스트`;
+            art.className = `warp-art${isCone ? ' lightcone-art' : ''}`;
+            document.getElementById('warp-banner-tag').textContent = `${isCone ? '광추' : '캐릭터'} ${choice.collaboration ? '콜라보' : '이벤트'} 워프`;
+            document.getElementById('warp-banner-title').textContent = banner.title;
+            document.getElementById('warp-banner-subtitle').innerHTML = `★5 ${isCone ? '광추' : '캐릭터'} 「${escapeHTML(item.name)}」<br><span class="warp-rate">출현 확률 UP!</span>`;
+            document.getElementById('warp-banner-name').textContent = `✧ ${item.name}`;
+            const pathName=item.pathName||characterCatalog.find(c=>c.path===item.path)?.pathName||item.path;
+            document.getElementById('warp-banner-path').textContent = isCone ? `${pathName} / 한정 광추` : `${pathName} / ${item.elementName}`;
+            document.getElementById('warp-banner-note').innerHTML = `이벤트 기간 한정 ${isCone ? '광추' : '캐릭터'} 확률 증가<br>10회 워프 시 ★4 이상의 캐릭터 또는 광추 확정`;
+            document.getElementById('warp-banner-note').innerHTML += choice.collaboration ? '<br>콜라보 전용 천장 · ★4 픽업 없음' : '<br>같은 종류의 이벤트 워프끼리 천장 공유';
+            const featured = document.getElementById('warp-banner-featured');
+            featured.className = `warp-featured${isCone ? ' cones' : ''}`;
+            featured.setAttribute('aria-label', '4성 픽업 ' + (isCone ? '광추' : '캐릭터'));
+            featured.innerHTML = banner.pool4Up.map(entry => `<div class="warp-portrait"><img src="${entry.image}" alt="${escapeHTML(entry.name)}"><span>${escapeHTML(entry.name)}</span></div>`).join('');
+            updateLobbyPickups();
+            updateUI();
+        }
+
+        function createIllustration(item) {
+            const content = document.createElement('div');
+            content.className = `illustration ${item.type} text-${item.rarity}star`;
+            const detail = item.type === 'character' ? [item.pathName, item.elementName].filter(Boolean).join(' · ') : '광추';
+            content.innerHTML = `<img class="illustration-img" src="${item.portrait || item.image}" alt="${escapeHTML(item.name)} 일러스트"><div class="illustration-info"><div class="illustration-stars">${'★'.repeat(item.rarity)}</div><h2>${escapeHTML(item.name)}</h2><p>${escapeHTML(detail)}</p></div>`;
+            return content;
+        }
+
+        let viewerPreviousFocus = null;
+        function openCollectionItem(type, id) {
+            const item = collectionItems.find(entry => entry.type === type && entry.id === id);
+            if (!item) return;
+            viewerPreviousFocus = document.activeElement;
+            const container = document.getElementById('art-viewer-content');
+            container.replaceChildren(createIllustration(item));
+            document.getElementById('art-viewer').style.display = 'flex';
+            document.getElementById('art-viewer-close').focus();
+        }
+        function closeArtViewer() {
+            document.getElementById('art-viewer').style.display = 'none';
+            document.getElementById('art-viewer-content').replaceChildren();
+            viewerPreviousFocus?.focus();
+        }
+        document.addEventListener('keydown', event => {
+            if (document.getElementById('art-viewer').style.display !== 'flex') return;
+            if (event.key === 'Escape') closeArtViewer();
+            if (event.key === 'Tab') { event.preventDefault(); document.getElementById('art-viewer-close').focus(); }
+        });
+
+        const DOM = {
+            lobby: document.getElementById('lobby-screen'), // 추가됨
+            warp: document.getElementById('warp-screen'),   // main에서 warp로 변경
+            anim: document.getElementById('anim-screen'),
+            singleScreen: document.getElementById('single-reveal-screen'),
+            singleContainer: document.getElementById('single-card-container'),
+            result: document.getElementById('result-screen'),
+            cards: document.getElementById('cards-container'),
+            pity5Text: document.getElementById('ui-pity5'),
+            pity4Text: document.getElementById('ui-pity4'),
+            g5Text: document.getElementById('ui-guaranteed5'),
+            g4Text: document.getElementById('ui-guaranteed4'),
+            colModal: document.getElementById('collection-modal'),
+            skipBtn: document.getElementById('skip-btn')
+        };
+
+        // 화면 전환 로직
+        function goToWarpScreen(type = 'character') {
+            if (isWarping || !banners[type]) return;
+            selectBanner(type);
+            DOM.lobby.style.opacity = '0';
+            setTimeout(() => {
+                DOM.lobby.style.display = 'none';
+                DOM.warp.style.display = 'flex';
+                setTimeout(() => { DOM.warp.style.opacity = '1'; }, 20);
+            }, 400);
+        }
+
+        function goToLobby() {
+            if (isWarping) return; // 워프 진행 중엔 못 나감
+            closeBannerPicker();
+            DOM.warp.style.opacity = '0';
+            setTimeout(() => {
+                DOM.warp.style.display = 'none';
+                DOM.lobby.style.display = 'flex';
+                setTimeout(() => { DOM.lobby.style.opacity = '1'; }, 20);
+            }, 400);
+        }
+
+        function getRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        function pullSingle() {
+            const banner = banners[activeBanner];
+            const { five: prob5, four: prob4 } = getWarpProbabilities();
+
+            let r = Math.random();
+            let finalItem = null;
+
+            if (r < prob5) {
+                pity5 = 0; pity4 = 0;
+                if (guaranteed5 || Math.random() < banner.rateUp) {
+                    finalItem = banner.featured;
+                    guaranteed5 = false;
+                } else {
+                    finalItem = getRandom(banner.pool5);
+                    guaranteed5 = true;
+                }
+            } 
+            else if (r < prob5 + prob4 || pity4 >= 9) {
+                pity5++; pity4 = 0;
+                if (banner.collaboration) {
+                    finalItem = getRandom(banner.pool4);
+                    guaranteed4 = false;
+                } else if (guaranteed4 || Math.random() < banner.rateUp4) {
+                    finalItem = getRandom(banner.pool4Up);
+                    guaranteed4 = false;
+                } else {
+                    finalItem = getRandom(banner.pool4);
+                    guaranteed4 = true;
+                }
+            } 
+            else {
+                pity5++; pity4++;
+                finalItem = getRandom(pool3);
+            }
+
+            const inventoryKey = getInventoryKey(finalItem);
+            userInventory[inventoryKey] = 1;
+
+            warpHistory[activeStateKey].push({ bannerId: banner.featured.id, bannerTitle: banner.title, name: finalItem.name, rarity: finalItem.rarity, type: finalItem.type, featured: finalItem.rarity === 5 ? finalItem.name === banner.featured.name : banner.pool4Up.some(item => item.name === finalItem.name), time: new Date().toISOString() });
+            saveWarpProgress();
+
+            return finalItem;
+        }
+
+        function updateUI() {
+            document.getElementById('ui-pity5-limit').textContent = `/ ${banners[activeBanner].maxPity}`;
+            DOM.pity5Text.innerText = pity5;
+            DOM.pity4Text.innerText = pity4;
+            DOM.g5Text.style.opacity = guaranteed5 ? '1' : '0';
+            DOM.g4Text.style.opacity = guaranteed4 ? '1' : '0';
+        }
+
+        function doWarp(count) {
+            if (!HonkaiProfileStorage.id) return;
+            if (isWarping) return;
+            isWarping = true;
+            document.getElementById('warp-banner-select').disabled=true;
+            document.getElementById('warp-type-character').disabled=true;
+            document.getElementById('warp-type-lightcone').disabled=true;
+
+            let results = [];
+            let maxRarity = 3;
+
+            for (let i = 0; i < count; i++) {
+                let item = pullSingle();
+                results.push(item);
+                if (item.rarity > maxRarity) maxRarity = item.rarity;
+            }
+
+            revealQueue = results;
+            WarpAudio.preloadVoices(results);
+            WarpPathReveal.preload(results);
+            // Warm the full-size artwork while the portal animation is playing.
+            results.forEach(item => { const image = new Image(); image.src = item.portrait || item.image; image.decode?.().catch(() => {}); });
+            playAnimation(maxRarity);
+        }
+
+        function playAnimation(maxRarity) {
+            DOM.warp.style.opacity = '0';
+            DOM.warp.style.pointerEvents = 'none';
+            DOM.skipBtn.style.display = 'block';
+            DOM.anim.style.display = 'flex';
+            WarpCinematic.start({rarity:maxRarity, count:revealQueue.length, featured:revealQueue.find(item=>item.rarity===5), onComplete:()=>{
+                startRevealSequence();
+            }});
+        }
+
+        function handleSkip() {
+            if (!isWarping) return;
+            WarpPathReveal.stop();
+            WarpCinematic.stop();
+
+            DOM.anim.style.display = 'none';
+            DOM.singleScreen.style.opacity = '0';
+            DOM.singleScreen.style.display = 'none';
+            
+            updateUI(); // 스킵 시 천장 적용
+            
+            if (revealQueue.length === 1) {
+                currentRevealIdx = 0;
+                DOM.singleScreen.style.display = 'flex';
+                setTimeout(() => { DOM.singleScreen.style.opacity = '1'; }, 10);
+                nextReveal();
+            } else {
+                showFinalSummary(revealQueue);
+            }
+            
+            DOM.skipBtn.style.display = 'none'; 
+        }
+
+        function startRevealSequence() {
+            updateUI(); 
+            currentRevealIdx = 0;
+            
+            DOM.warp.style.opacity = '0';
+            DOM.warp.style.pointerEvents = 'none';
+            
+            DOM.singleScreen.style.display = 'flex';
+            setTimeout(() => { DOM.singleScreen.style.opacity = '1'; }, 10);
+            
+            nextReveal();
+        }
+
+        function nextReveal() {
+            if (WarpPathReveal.finish()) return;
+            WarpAudio.stopVoice();
+            if (currentRevealIdx < revealQueue.length) {
+                let item = revealQueue[currentRevealIdx];
+                DOM.singleContainer.innerHTML = ''; 
+                
+                let card = document.createElement('div');
+                let borderClass = item.rarity === 5 ? 'border-5star' : (item.rarity === 4 ? 'border-4star' : 'border-3star');
+                let textClass = item.rarity === 5 ? 'text-5star' : (item.rarity === 4 ? 'text-4star' : 'text-3star');
+                let starsHTML = `<span class="${textClass}">✦</span>`.repeat(item.rarity);
+                
+                card.className = `gacha-card single-reveal-card ${borderClass}`;
+                let imgDiv = item.image ? `<div class="card-img-bg" style="background-image: url('${item.image}');"></div>` : '';
+                
+                card.innerHTML = `
+                    ${imgDiv}
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <div class="stars-disp">${starsHTML}</div>
+                        <div class="card-name ${textClass}">${item.name}</div>
+                    </div>
+                `;
+                
+                if (item.rarity >= 4) card = createIllustration(item);
+
+                
+                let bgGradient = 'rgba(0,0,0,0.9)';
+                if (item.rarity === 5) bgGradient = 'radial-gradient(circle, rgba(255,204,102,0.15) 0%, rgba(0,0,0,0.9) 70%)';
+                else if (item.rarity === 4) bgGradient = 'radial-gradient(circle, rgba(199,118,255,0.15) 0%, rgba(0,0,0,0.9) 70%)';
+                DOM.singleScreen.style.background = bgGradient;
+
+                const revealArtwork = () => {
+                    DOM.singleContainer.appendChild(card);
+                    card.classList.add('warp-reveal-enter');
+                    if (item.type === 'character' && item.rarity === 5 && !document.hidden) WarpAudio.speak(item);
+                };
+                if (item.rarity === 5) {
+                    WarpPathReveal.show({item, container: DOM.singleContainer, onReveal: revealArtwork});
+                } else revealArtwork();
+                
+                currentRevealIdx++;
+            } else {
+                DOM.singleScreen.style.opacity = '0';
+                DOM.skipBtn.style.display = 'none'; 
+
+                setTimeout(() => {
+                    DOM.singleScreen.style.display = 'none';
+                    DOM.singleScreen.style.background = 'rgba(0,0,0,0.9)'; 
+                    
+                    if (revealQueue.length === 1) resetToWarp();
+                    else showFinalSummary(revealQueue);
+                }, 300);
+            }
+        }
+
+        function showFinalSummary(results) {
+            WarpPathReveal.stop();
+            WarpAudio.stopVoice();
+            DOM.cards.innerHTML = '';
+            
+            let sortedResults = [...results].sort((a, b) => b.rarity - a.rarity);
+
+            sortedResults.forEach((item, idx) => {
+                let card = document.createElement('div');
+                let borderClass = item.rarity === 5 ? 'border-5star' : (item.rarity === 4 ? 'border-4star' : 'border-3star');
+                let textClass = item.rarity === 5 ? 'text-5star' : (item.rarity === 4 ? 'text-4star' : 'text-3star');
+                let starsHTML = `<span class="${textClass}">✦</span>`.repeat(item.rarity);
+                
+                card.className = `gacha-card summary-card ${borderClass}`;
+                let imgDiv = item.image ? `<div class="card-img-bg" style="background-image: url('${item.image}');"></div>` : '';
+                
+                card.innerHTML = `
+                    ${imgDiv}
+                    <div class="card-overlay"></div>
+                    <div class="card-content">
+                        <div class="stars-disp">${starsHTML}</div>
+                        <div class="card-name ${textClass}">${item.name}</div>
+                    </div>
+                `;
+                DOM.cards.appendChild(card);
+                setTimeout(() => { card.classList.add('reveal'); }, 50 + (idx * 50));
+            });
+
+            DOM.result.style.display = 'flex';
+            setTimeout(() => { DOM.result.style.opacity = '1'; }, 50);
+        }
+
+        function resetToWarp() {
+            WarpPathReveal.stop();
+            WarpCinematic.stop();
+            DOM.result.style.opacity = '0';
+            setTimeout(() => {
+                DOM.result.style.display = 'none';
+                DOM.cards.innerHTML = '';
+                DOM.singleContainer.innerHTML = '';
+                
+                DOM.warp.style.pointerEvents = 'auto';
+                DOM.warp.style.display = 'flex'; // 확실히 flex로 복원
+                DOM.warp.style.opacity = '1';
+                
+                isWarping = false; 
+                document.getElementById('warp-banner-select').disabled=false;
+                document.getElementById('warp-type-character').disabled=false;
+                document.getElementById('warp-type-lightcone').disabled=false;
+            }, 400);
+        }
+
+        let currentTab = 'character';
+        function openCollection() {
+            DOM.colModal.style.display = 'flex';
+            setTimeout(() => { DOM.colModal.style.opacity = '1'; }, 10);
+            renderCollection();
+        }
+        function closeCollection() {
+            DOM.colModal.style.opacity = '0';
+            setTimeout(() => { DOM.colModal.style.display = 'none'; }, 300);
+        }
+        function switchTab(tabType) {
+            currentTab = tabType;
+            document.getElementById('collection-search').value = '';
+            document.getElementById('collection-rarity').value = 'all';
+            if (tabType === 'character') {
+                document.getElementById('tab-character').classList.add('active');
+                document.getElementById('tab-lightcone').classList.remove('active');
+            } else {
+                document.getElementById('tab-character').classList.remove('active');
+                document.getElementById('tab-lightcone').classList.add('active');
+            }
+            renderCollection();
+        }
+        function generateGridHTML(rarity, type, filteredItems = collectionItems) {
+            const items = filteredItems.filter(i => i.rarity === rarity && i.type === type);
+            if (items.length === 0) return ''; 
+
+            let titleColor = rarity === 5 ? 'text-yellow-400 border-yellow-800' : (rarity === 4 ? 'text-purple-400 border-purple-800' : 'text-blue-400 border-blue-800');
+            let html = `<div class="rarity-header ${titleColor}">${rarity}성 ${type === 'character' ? '캐릭터' : '광추'}</div><div class="col-grid">`;
+
+            items.forEach(item => {
+                const isUnlocked = userInventory[getInventoryKey(item)] === 1;
+                const stateClass = isUnlocked ? `unlocked rarity-${rarity}` : 'locked';
+                const badgeHTML = isUnlocked ? '' : `<div class="col-badge text-gray-300" aria-label="미획득">🔒</div>`;
+                const bgStyle = item.image ? `background-image: url('${item.image}'); background-size: cover; background-position: center;` : `background: linear-gradient(135deg, #1e293b, #0f172a);`;
+                let nameColor = isUnlocked ? (rarity === 5 ? 'text-yellow-400' : (rarity === 4 ? 'text-purple-300' : 'text-blue-200')) : 'text-gray-200';
+
+                const detailHTML = item.type === 'character' ? `<span class="col-item-detail">${item.pathName} · ${item.elementName}</span>` : '';
+                html += `<button type="button" class="col-item ${stateClass}" style="${bgStyle}" onclick="openCollectionItem('${item.type}', '${item.id}')" aria-label="${escapeHTML(item.name)} 일러스트 확대">${badgeHTML}<div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 60%); z-index: 3;"></div><div class="col-item-name ${nameColor}">${escapeHTML(item.name)}${detailHTML}</div></button>`;
+            });
+            return html + `</div>`;
+        }
+        function renderCollection() {
+            const query = document.getElementById('collection-search').value.trim().toLocaleLowerCase();
+            const rarity = document.getElementById('collection-rarity').value;
+            const allItems = collectionItems.filter(item => item.type === currentTab);
+            const items = allItems.filter(item => item.name.toLocaleLowerCase().includes(query) && (rarity === 'all' || item.rarity === Number(rarity)));
+            document.getElementById('collection-count').textContent = `${items.length} / ${allItems.length}종`;
+            let finalHTML = generateGridHTML(5, currentTab, items) + generateGridHTML(4, currentTab, items) + generateGridHTML(3, currentTab, items);
+            if (!items.length) finalHTML = '<p class="collection-empty">검색 결과가 없습니다.</p>';
+            document.getElementById('collection-render-area').innerHTML = finalHTML;
+        }
+
+        // 앱 초기 구동 시 UI 렌더링
+        selectBanner('character');
+        saveWarpProgress();
+    </script>
+    <section id="relic-screen" aria-labelledby="relic-heading" hidden>
+        <div class="relic-shell">
+            <header class="relic-header">
+                <button class="relic-back" onclick="closeRelicCalculator()">‹ 로비로 돌아가기</button>
+                <span class="relic-eyebrow font-orbitron">RELIC LAB / 01</span>
+            </header>
+            <div class="relic-intro"><p class="relic-eyebrow">내 준종결 표로 확인하는 세팅</p><h1 id="relic-heading">이 세팅, <span>종결일까?</span></h1><p>캐릭터 전체 능력치를 표와 비교하거나, 표의 유효 옵션으로 유물 한 개를 평가하세요.</p></div>
+            <div class="relic-layout">
+                <form id="relic-form" class="relic-panel" novalidate>
+                    <div class="relic-panel-heading"><h2 id="relic-form-heading">세팅 분석</h2><span id="relic-analysis-chip" class="relic-chip">첨부 표 / 4.6V</span></div>
+                    <div class="relic-character"><img id="relic-character-image" src="assets/characters/1503.png" alt="펄"><div><label for="relic-character-search">장착 캐릭터 검색</label><input id="relic-character-search" type="search" placeholder="캐릭터 이름으로 검색" autocomplete="off"><label for="relic-character-select" class="relic-search-select-label">검색 결과에서 선택</label><select id="relic-character-select"></select><p id="relic-character-search-count" class="relic-muted" aria-live="polite"></p><p id="relic-character-meta"></p></div></div>
+                    <div class="relic-mode-tabs" role="tablist" aria-label="평가 방식"><button type="button" id="relic-mode-build" role="tab" aria-selected="true">준종결 → 종결 비교</button><button type="button" id="relic-mode-item" role="tab" aria-selected="false">유물 한 개 평가</button></div>
+                    <details id="relic-reference-card" class="relic-reference-card" open><summary>첨부 준종결 표 기준</summary><div id="relic-reference-content"></div></details>
+                    <div id="relic-build-inputs"><p class="relic-muted">준종결은 첨부 표, 종결은 계산기의 제안값입니다. 공격력·HP·방어력·치명타 피해·격파는 +15%, 치명타 확률은 +5%p(최대 100%)로 제안합니다. 속도·명중·저항과 상한 조건은 유지하므로 조합에 맞게 종결 목표를 직접 조정하세요.</p><div class="relic-target-heading"><span>능력치</span><span>현재 수치</span><span>준종결</span><span>종결</span><span>조건</span></div><div id="relic-build-targets"></div><div class="relic-target-add"><select id="relic-target-add-select" aria-label="비교할 능력치 추가"></select><button type="button" id="relic-target-add">목표 추가 +</button></div><button type="button" id="relic-build-example" class="relic-text-button">준종결 목표 예시 입력 ↗</button><p class="relic-muted">전투 수치로 적힌 항목은 해당 버프가 적용된 수치를 입력하세요. ‘최대한’·상대 속도처럼 숫자가 없는 조건은 원문을 확인하고 목표를 추가할 수 있습니다.</p></div>
+                    <div id="relic-item-inputs" hidden>
+                    <label for="relic-profile-select">평가할 빌드</label><select id="relic-profile-select"></select><p id="relic-profile-note" class="relic-muted"></p>
+                    <div class="relic-panel-heading relic-subheading"><h3>부옵션 수치</h3><button id="relic-example" type="button" class="relic-text-button">예시 입력 ↗</button></div>
+                    <p class="relic-muted">유물에 표시된 수치를 입력하세요. 없는 줄은 0으로 둡니다.</p>
+                    <div id="relic-stat-rows"></div>
+                    <details class="relic-weight-details"><summary>옵션 가중치 조정 <span>0 = 제외 · 1 = 최우선</span></summary><div id="relic-weights" class="relic-weight-grid"></div></details>
+                    </div>
+                    <p id="relic-error" class="relic-error" role="alert" hidden></p>
+                    <div class="relic-save-panel"><label for="relic-save-name">내 세팅 저장</label><div class="relic-save-row"><input id="relic-save-name" type="text" maxlength="60" placeholder="세팅 이름 (예: 펄 방어 세팅)"><button id="relic-save" type="button">새로 저장</button></div><label for="relic-saved-select">이 캐릭터의 저장 목록</label><div class="relic-save-row"><select id="relic-saved-select"></select><button id="relic-load" type="button">불러오기</button><button id="relic-delete" type="button" disabled>삭제</button></div><p id="relic-save-status" class="relic-muted" role="status" aria-live="polite"></p></div>
+                    <div class="relic-form-actions"><button id="relic-analyze-button" class="relic-analyze" type="submit">준종결 세팅 분석 <span>→</span></button><button id="relic-reset" type="button" class="relic-reset">수치 초기화</button></div>
+                </form>
+                <aside id="relic-result" class="relic-panel relic-result" aria-labelledby="relic-result-heading">
+                    <div class="relic-panel-heading"><h2 id="relic-result-heading">분석 결과</h2><span class="relic-eyebrow">WEIGHTED SCORE</span></div>
+                    <div class="relic-score-ring"><div><span id="relic-rank">—</span><p><strong id="relic-score" aria-hidden="true">0.0</strong><span> / 100</span></p></div></div>
+                    <div id="relic-announcement" class="relic-result-message" aria-live="polite">부옵션을 입력하면 등급이 나옵니다.</div>
+                    <div class="relic-metrics"><div><span id="relic-metric-label-one">충족한 목표</span><strong id="relic-cv">—</strong></div><div><span id="relic-metric-label-two">미충족 목표</span><strong id="relic-effective">—</strong></div></div>
+                    <div id="relic-breakdown" class="relic-breakdown"><p class="relic-muted">각 옵션이 점수에 얼마나 기여하는지 확인할 수 있습니다.</p></div>
+                    <div id="relic-rank-scale" class="relic-rank-scale"></div>
+                </aside>
+            </div>
+            <details class="relic-method"><summary>표를 어떻게 반영하나요?</summary><p>준종결 목표를 모두 충족하면 85점(S), 이후 종결까지의 추가 달성률을 반영해 95점부터 SS를 부여합니다. 더 엄격한 종결 목표가 하나 이상 있고 모든 종결 조건을 충족해야 100점(SSS)입니다. 준종결 조건이 하나라도 부족하면 최대 84.9점입니다. 동일한 준종결·종결 조건은 유지해야 할 조건으로만 평가합니다. 종결 제안값과 등급은 원본 표에 없는 계산기의 기준이며, 실제 조합의 최적 세팅을 보장하지 않습니다. 저장은 캐릭터별로 현재 수치·목표·평가 방식·가중치를 이 브라우저에 보관합니다.</p><p>유물 한 개 평가는 표의 ‘유효 부가옵션’에 있는 옵션에 동등한 가중치 1, 나머지에 0을 적용합니다. 표에 숫자 가중치와 SSS~C 등급 기준은 없으므로 등급 구간은 이 계산기의 기준입니다. 여러 빌드가 있는 행은 유효 옵션을 합쳐 표시하므로, 실제 빌드에서 제외할 옵션은 가중치를 조정하세요. 초기 옵션과 강화 5회를 5성 최고 강화 수치로 환산한 뒤 최적의 가중 합을 100점으로 표시합니다.</p><p>기준: 붕괴 : 스타레일 세팅 4.6V · 수정: 네이드, ode. 조합·성혼·광추·세트에 따른 조건은 캐릭터별 원문을 확인하세요.</p><a href="assets/relic-setting-reference.pdf" target="_blank" rel="noopener noreferrer">첨부 준종결 표 원본 보기 ↗</a> · <a href="https://github.com/Mar-7th/StarRailRes/blob/master/index_new/en/relic_sub_affixes.json" target="_blank" rel="noopener noreferrer">부옵션 강화 수치 데이터 ↗</a></details>
+        </div>
+    </section>
+    <script src="assets/relic-reference.js"></script>
+    <script src="assets/relic-calculator.js"></script>
+    <section id="team-screen" aria-labelledby="team-heading" hidden>
+        <div class="team-shell">
+            <header class="team-header"><button id="team-back" type="button">‹ 로비로 돌아가기</button><span>TEAM LAB / 2026.10.01</span></header>
+            <div class="team-intro"><h1 id="team-heading">함께할수록, <span>더 강하게.</span></h1><p>공략의 핵심 편성을 먼저 확인하고, 성혼·광추·속도 조건에 맞는 고점 후보와 보유 대안을 비교하세요.</p></div>
+            <div class="team-layout">
+                <aside class="team-controls">
+                    <label for="team-search">메인 딜러 검색</label><input id="team-search" type="search" placeholder="반디, 비소, 아케론…" autocomplete="off">
+                    <label for="team-main">메인 딜러 선택</label><select id="team-main"></select><p id="team-search-count" class="team-muted" aria-live="polite"></p>
+                    <div id="team-main-info" class="team-main-info"></div>
+                    <label class="team-checkbox"><input id="team-owned-only" type="checkbox">이 아이디의 보유 캐릭터만</label>
+                    <label class="team-checkbox"><input id="team-offensive" type="checkbox" checked>무생존 고점 후보도 보기</label>
+                    <label class="team-checkbox"><input id="team-four-star" type="checkbox">지원·생존 슬롯은 4성만</label>
+                    <label id="team-e2-setting" class="team-checkbox" hidden><input id="team-acheron-e2" type="checkbox">아케론 2돌 이상</label>
+                    <p class="team-muted">보유 여부는 이 앱의 워프 획득 목록을 사용합니다. 개척자도 획득 표시가 있어야 보유 필터에 포함됩니다.</p>
+                    <h2 class="team-saved-heading">내 저장 파티</h2><div id="team-saved"></div><p id="team-status" class="team-muted" role="status" aria-live="polite"></p>
+                </aside>
+                <div><div id="team-saved-preview"></div><div id="team-results" aria-live="polite"></div>
+                    <details class="team-method"><summary>추천 기준과 참고 자료</summary><p>공략에 명시된 시너지를 조합한 핵심 편성 후보를 임의 버프 점수보다 먼저 표시합니다. 각 후보에 출처, 확인일, 확인 가능한 원문 갱신일을 붙입니다. 확인일이 곧 공략의 갱신일은 아닙니다. 후보의 표시 순서는 이 앱의 편성 우선순위이며, 동일 투자·동일 적 조건으로 측정한 DPS 순위가 아닙니다.</p><p>아케론 2돌 여부, 히아킨·사이퍼의 광추 조건, 카스토리스의 적 수에 따른 운용, 애쉬베일의 메인/서브 역할, 파이논의 무생존 편성을 구분합니다. 파티 전체의 DPS를 시뮬레이션한 결과는 아니며, 공략의 개별 설명에서 재구성한 후보임을 카드에 표시합니다. 공략 편성이 없거나 보유 필터로 제외되면 ‘호환성 추정 대안’으로 구분해 제공합니다. 아직 조사하지 않은 딜러를 고점 검증 대상으로 표시하지 않습니다.</p><p><a href="https://www.prydwen.gg/star-rail/characters/firefly" target="_blank" rel="noopener noreferrer">반디</a> · <a href="https://www.prydwen.gg/star-rail/characters/acheron" target="_blank" rel="noopener noreferrer">아케론</a> · <a href="https://www.prydwen.gg/star-rail/characters/feixiao" target="_blank" rel="noopener noreferrer">비소</a> · <a href="https://www.prydwen.gg/star-rail/characters/castorice" target="_blank" rel="noopener noreferrer">카스토리스</a> · <a href="https://www.prydwen.gg/star-rail/characters/hysilens" target="_blank" rel="noopener noreferrer">히실렌스</a> · <a href="https://www.prydwen.gg/star-rail/characters/sparxie" target="_blank" rel="noopener noreferrer">스파키</a> · <a href="https://www.prydwen.gg/star-rail/characters/pearl" target="_blank" rel="noopener noreferrer">펄</a></p></details>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="assets/team-synergy-data.js"></script>
+    <script src="assets/team-meta-presets.js"></script>
+    <script src="assets/team-builder.js"></script>
+    </div>
+</body>
+</html>
