@@ -159,6 +159,10 @@
         changeMode('build');
         if (latest) {get('relic-saved-select').value=latest.id;loadSetup();}
     });
+    globalThis.addEventListener('honkai-documents-changed',()=>{
+        const selected=get('relic-saved-select').value;
+        readSavedSetups();refreshSavedSetups(selected);
+    });
     function refreshSavedSetups(selectedId) {
         const entries = savedSetups.filter(s=>s.characterId===get('relic-character-select').value);
         get('relic-saved-select').innerHTML = entries.length ? entries.map(s=>`<option value="${escape(s.id)}">${escape(s.name)} · ${s.mode==='item' ? '유물' : '세팅'} · ${escape(new Date(s.savedAt).toLocaleString('ko-KR'))}</option>`).join('') : '<option value="">저장된 세팅이 없습니다</option>';
@@ -167,7 +171,7 @@
         get('relic-delete').disabled = !entries.length || Boolean(storageError);
         get('relic-save-status').textContent = storageError || `${entries.length}개 저장됨 · ${HonkaiProfileStorage.id || '접속 전'} 아이디 / 이 브라우저에 보관됩니다.`;
     }
-    function saveSetup() {
+    async function saveSetup() {
         if (!HonkaiProfileStorage.id) {get('relic-save-status').textContent='아이디를 입력하고 접속하세요.';return;}
         if (!get('relic-character-select').value) {get('relic-save-status').textContent='캐릭터를 먼저 선택하세요.';return;}
         if (storageError) {get('relic-save-status').textContent=storageError;return;}
@@ -182,22 +186,22 @@
         };
         try {
             const next = [...savedSetups,setup];
-            HonkaiProfileStorage.setItem(saveKey,JSON.stringify(next));
+            await HonkaiProfileStorage.setItem(saveKey,JSON.stringify(next));
             savedSetups=next;refreshSavedSetups(setup.id);
             get('relic-save-status').textContent=`‘${setup.name}’ 저장 완료. 입력 중인 수치와 목표도 함께 저장했습니다.`;
-        } catch {get('relic-save-status').textContent='저장하지 못했습니다. 브라우저 저장 공간과 저장 허용 설정을 확인하세요.';}
+        } catch (error) {get('relic-save-status').textContent=`저장하지 못했습니다. ${error.message}`;}
     }
-    function deleteSetup() {
+    async function deleteSetup() {
         if (!HonkaiProfileStorage.id || storageError) return;
         const index = savedSetups.findIndex(s=>s.id===get('relic-saved-select').value && s.characterId===get('relic-character-select').value);
         if (index < 0) return;
         const setup = savedSetups[index];
         try {
             const next = savedSetups.filter((_,i)=>i!==index);
-            HonkaiProfileStorage.setItem(saveKey,JSON.stringify(next));
+            await HonkaiProfileStorage.setItem(saveKey,JSON.stringify(next));
             savedSetups=next;refreshSavedSetups();
             get('relic-save-status').textContent=`‘${setup.name}’ 삭제 완료.`;
-        } catch {get('relic-save-status').textContent='삭제하지 못했습니다. 브라우저 저장 허용 설정을 확인하세요.';}
+        } catch (error) {get('relic-save-status').textContent=`삭제하지 못했습니다. ${error.message}`;}
     }
     function loadSetup() {
         const setup = savedSetups.find(s=>s.id===get('relic-saved-select').value && s.characterId===get('relic-character-select').value);

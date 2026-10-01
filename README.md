@@ -18,7 +18,9 @@ assets/paths/              운명의 길 아이콘 및 출처
 assets/audio/              BGM, 음성 및 출처
 docs/                      데이터 출처와 기능 설명
 docs/references/           참고 PDF
-scripts/                   리소스 및 워프 표시 회귀 검증
+scripts/                   로컬 실행, 저장·리소스·API 검증
+backend/                   향후 사용할 Spring Boot + MySQL 코드
+tmp/runtime/               이 PC의 실행 도구·DB·설정 (Git 제외)
 ```
 
 문서는 [캐릭터](docs/characters-README.md), [광추](docs/light-cones-README.md), [배너](docs/WARP-BANNERS.md), [음악](docs/WARP-MUSIC.md)을 참고하세요.
@@ -41,11 +43,16 @@ Node.js가 설치된 환경에서:
 
 ```sh
 node scripts/verify.mjs
+node scripts/verify-local-profile.mjs
 ```
 
-JS 구문, 로컬 리소스 경로와 대소문자, 카탈로그 일러스트, 이미지 대체 로직을 확인합니다. 실제 모바일 브라우저의 시각 검증은 별도로 필요합니다.
+JS 구문, 로컬 리소스 경로와 대소문자, 카탈로그 일러스트, 이미지 대체 로직과 아이디별 로컬 저장을 확인합니다. 실제 모바일 브라우저의 시각 검증은 별도로 필요합니다.
 
-기본 설정에서는 기록이 브라우저의 프로필별 localStorage에 저장됩니다. `backend/`에 Spring Boot + MySQL 서버와 워프 API 연결을 추가했습니다. 실행·배포·연결 방법은 [백엔드 안내](backend/README.md)를 참고하세요. `assets/js/backend-config.js`에 서버 주소를 설정하면 워프 추첨·천장·기록을 서버에서 관리합니다. 유물 세팅과 저장 파티는 기존 로컬 저장을 유지합니다.
+기본 사이트는 서버 없이 실행됩니다. 회원가입·비밀번호 없이 저장용 아이디를 입력하면 워프 기록·천장·보유 목록·유물 세팅·저장 파티를 이 브라우저의 아이디별 localStorage에 보관합니다. 아이디는 1~30자의 한글·영문·숫자·밑줄·점·하이픈이며 영문 대소문자를 구분하지 않습니다. 같은 브라우저·같은 사이트 주소·같은 아이디로 다시 불러올 수 있고 다른 기기·브라우저와는 자동 연동되지 않습니다. 브라우저 사이트 데이터를 지우면 로컬 기록도 지워지므로 보관에 주의하세요. 기존 브라우저 저장 데이터는 초기화하지 않습니다.
+
+`assets/js/backend-config.js`는 기본적으로 `baseUrl: ''`이며 API를 호출하지 않습니다. `backend/`의 Spring Boot + MySQL 계정 코드와 DB 파일은 향후 사용을 위해 보관합니다. 현재 아이디 접속 화면에서는 DB 계정 데이터를 불러오지 않으며, 백엔드를 다시 사용하려면 계정 화면과 서버 연결을 함께 복원해야 합니다. 이전 구성은 [백엔드 안내](backend/README.md)에 있습니다.
+
+로컬 화면만 실행하려면 프로젝트 루트에서 `node scripts/serve-local.mjs`를 실행하고 `http://localhost:5500`에 접속하세요. 이 PC의 독립 실행 파일을 사용하려면 `tmp/runtime/node.exe scripts/serve-local.mjs`로 실행합니다. 정적 호스팅에서도 Java/MySQL 없이 사용할 수 있습니다.
 
 API 통신 검증:
 

@@ -8,6 +8,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Value("${app.allowed-origins}") private String origins;
     @Override public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**").allowedOrigins(Arrays.stream(origins.split(",")).map(String::trim).toArray(String[]::new))
-            .allowedMethods("GET","POST","PUT","OPTIONS").allowedHeaders("Authorization","Content-Type").allowCredentials(false).maxAge(3600);
+            .allowedMethods("GET","POST","PUT","OPTIONS").allowedHeaders("Authorization","Content-Type","X-Honkai-Client","X-Honkai-Account").allowCredentials(true).maxAge(3600);
     }
 }

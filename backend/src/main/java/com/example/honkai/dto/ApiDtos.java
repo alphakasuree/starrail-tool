@@ -6,7 +6,9 @@ import java.util.*;
 public final class ApiDtos {
     private ApiDtos() {}
     public record CreateProfile(@NotBlank @Size(max=30) String displayName) {}
-    public record ProfileToken(String profileId, String token, Instant expiresAt) {}
+    public record ProfileToken(String profileId, String token, Instant expiresAt) {
+        @Override public String toString() { return "ProfileToken[redacted]"; }
+    }
     public record PullRequest(@NotNull UUID requestId, @NotBlank @Size(max=64) String bannerKey,
         @Min(1) @Max(10) int count, @PositiveOrZero long expectedRevision) {}
     public record Selection(@NotBlank @Size(max=30) String character, @NotBlank @Size(max=30) String lightcone) {}

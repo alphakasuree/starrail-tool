@@ -5,5 +5,5 @@ import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 import java.util.*;
 public interface SessionRepository extends JpaRepository<ProfileSession, String> {
-
+    void deleteByProfileId(Long profileId);
 }

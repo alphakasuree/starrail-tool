@@ -1,3 +1,3 @@
-// Deploy backend separately, then set its HTTPS base URL (without /api).
-// An empty URL keeps the existing localStorage mode and current site behavior.
+// The default site runs entirely in the browser, with ID-scoped localStorage.
+// Backend/account code is retained separately for a future server deployment.
 globalThis.HonkaiBackendConfig = Object.freeze({ baseUrl: '' });

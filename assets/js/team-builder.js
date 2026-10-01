@@ -153,14 +153,14 @@
             get('team-status').textContent='저장한 파티를 불러왔습니다.';
         }));
     }
-    function saveTeam(team) {
+    async function saveTeam(team) {
         if(!HonkaiProfileStorage.id) return;
         const record={ids:team.members.map(c=>c.id),savedAt:Date.now(),ownedOnly:get('team-owned-only').checked,fourStarOnly:get('team-four-star').checked,acheronE2:get('team-acheron-e2').checked,offensive:get('team-offensive').checked};
         const next=[...savedTeams.filter(s=>s.ids.join(':')!==record.ids.join(':')),record];
-        try {HonkaiProfileStorage.setItem('teams',JSON.stringify(next));savedTeams=next;renderSaved();get('team-status').textContent=`${HonkaiProfileStorage.id} 아이디에 파티를 저장했습니다.`;}
-        catch {get('team-status').textContent='파티를 저장하지 못했습니다. 브라우저의 저장 공간을 확인하세요.';}
+        try {await HonkaiProfileStorage.setItem('teams',JSON.stringify(next));savedTeams=next;renderSaved();get('team-status').textContent=`${HonkaiProfileStorage.id} 아이디에 파티를 저장했습니다. 이 브라우저에 보관됩니다.`;}
+        catch (error) {get('team-status').textContent=`파티를 저장하지 못했습니다. ${error.message}`;}
     }
-    globalThis.addEventListener('honkai-profile-login',()=>{
+    ['honkai-profile-login','honkai-documents-changed'].forEach(event=>globalThis.addEventListener(event,()=>{
         savedTeams=[];
         try {
             const stored=JSON.parse(HonkaiProfileStorage.getItem('teams') || '[]');
@@ -169,7 +169,7 @@
             get('team-status').textContent='';
         } catch {get('team-status').textContent='저장한 파티 데이터를 읽을 수 없습니다.';}
         renderSaved();
-    });
+    }));
     get('team-search').addEventListener('input',()=>{get('team-saved-preview').innerHTML='';fillMains();});
     ['team-main','team-owned-only','team-four-star','team-acheron-e2','team-offensive'].forEach(id=>get(id).addEventListener('change',()=>{get('team-saved-preview').innerHTML='';render();}));
     fillMains();get('team-main').value='1310';render();renderSaved();
