@@ -3,6 +3,7 @@
     const prefix = 'honkai-id-v1:';
     const sections = new Set(['warp', 'relic', 'teams', 'account']);
     let activeId = null;
+    let linkedUid = false;
     function storageKey(section) {
         if (!activeId) throw new Error('아이디를 입력하고 접속하세요.');
         if (!sections.has(section)) throw new Error('저장 영역이 잘못되었습니다.');
@@ -40,6 +41,7 @@
     }
     globalThis.HonkaiProfileStorage = Object.freeze({
         get id() { return activeId; },
+        get linkedUid() { return linkedUid; },
         getItem(section) {
             if (!activeId) return null;
             const key = storageKey(section);
@@ -85,6 +87,7 @@
             if (bundle) {bundle.previous = null; writeBundle(bundle);}
         },
         renameProfile(name) {
+            if (linkedUid) throw new Error('연동 UID는 이름을 변경할 수 없습니다. UID · 프로필 변경으로 다른 UID를 조회하세요.');
             const id = String(name).trim().normalize('NFC').toLowerCase();
             if (!/^[\p{L}\p{N}_.-]{1,30}$/u.test(id)) throw new Error('프로필 이름은 1~30자의 한글·영문·숫자·밑줄·점·하이픈으로 입력하세요.');
             if (id === activeId) return;
@@ -107,28 +110,53 @@
     });
     document.addEventListener('DOMContentLoaded', () => {
         const get = id => document.getElementById(id);
-        get('profile-login-form').addEventListener('submit', event => {
+        get('profile-login-mode').addEventListener('change', () => {
+            const local = get('profile-login-mode').value === 'local', input = get('profile-login-id');
+            input.value = ''; input.minLength = local ? 1 : 9; input.maxLength = local ? 30 : 10;
+            input.inputMode = local ? 'text' : 'numeric';
+            input.pattern = local ? '[\\p{L}\\p{N}_.\\-]{1,30}' : '[1-9][0-9]{8,9}';
+            input.placeholder = local ? '기존 저장 프로필 이름' : '게임에 표시된 9~10자리 UID';
+            get('profile-login-label').textContent = local ? '저장 프로필 이름' : '붕괴: 스타레일 UID';
+            get('profile-submit').textContent = local ? '프로필 열기 →' : 'UID 조회하고 연동 →';
+            get('profile-login-error').textContent = ''; input.focus();
+        });
+        get('profile-login-form').addEventListener('submit', async event => {
             event.preventDefault();
+            const button = get('profile-submit');
+            if (button.disabled) return;
+            const local = get('profile-login-mode').value === 'local';
             const id = get('profile-login-id').value.trim().normalize('NFC').toLowerCase();
             const error = get('profile-login-error');
             error.textContent = '';
+            if (!local && !globalThis.HonkaiUid?.validUid(id)) {
+                error.textContent = '게임에 표시된 9~10자리 숫자 UID를 입력하세요.'; return;
+            }
             if (!/^[\p{L}\p{N}_.-]{1,30}$/u.test(id)) {
                 error.textContent = '아이디는 1~30자의 한글·영문·숫자·밑줄·점·하이픈으로 입력하세요.';
                 return;
             }
+            const label = button.textContent;
+            button.disabled = true; get('profile-login-mode').disabled = true; get('profile-login-id').disabled = true;
+            button.textContent = local ? '프로필을 여는 중…' : '게임 정보를 조회하는 중…';
             try {
+                const profile = local ? null : await HonkaiUid.lookup(id);
                 // A read-only browser must fail before entering. Existing saves
                 // and old backend sessions are never reset or removed.
                 localStorage.setItem(`${prefix}${encodeURIComponent(id)}:ready`, '1');
                 activeId = id;
+                linkedUid = !local;
+                if (profile) HonkaiAccount.importUid(profile);
                 globalThis.dispatchEvent(new Event('honkai-profile-login'));
-                get('profile-current-id').textContent = `프로필 ${id} · 이 브라우저에 저장`;
+                get('profile-current-id').textContent = profile ? `${profile.nickname} · UID ${id} · 개척 Lv.${profile.level}` : `프로필 ${id} · 이 브라우저에 저장`;
                 get('app-content').inert = false;
                 get('profile-login-screen').hidden = true;
                 get('profile-change').focus();
-            } catch {
+            } catch (failure) {
                 activeId = null;
-                error.textContent = '저장 공간을 사용할 수 없습니다. 브라우저의 사이트 데이터 저장을 허용하세요.';
+                linkedUid = false;
+                error.textContent = local ? '저장 공간을 사용할 수 없습니다. 브라우저의 사이트 데이터 저장을 허용하세요.' : failure.message || 'UID 연동에 실패했습니다. 사이트 데이터 저장 설정을 확인하세요.';
+            } finally {
+                button.disabled = false; get('profile-login-mode').disabled = false; get('profile-login-id').disabled = false; button.textContent = label;
             }
         });
         get('profile-change').addEventListener('click', () => {

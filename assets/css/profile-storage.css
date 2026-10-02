@@ -8,6 +8,16 @@
 .profile-login-card input:focus { outline: 2px solid #b8caff; outline-offset: 2px; }
 .profile-login-card button { width: 100%; padding: 14px; margin: 16px 0; border: 0; border-radius: 10px; background: #c2d3ff; color: #10203e; font: inherit; font-weight: 800; cursor: pointer; }
 #profile-login-error { color: #ffb7bc; min-height: 24px; }
+#profile-file-help { padding: 12px; margin-bottom: 16px; border: 1px solid #8d7951; border-radius: 10px; background: #342d20; }
+.profile-server-link { display: inline-block; color: #c2d3ff; text-decoration: underline; font-weight: 800; }
+#uid-showcase { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; margin-top: 16px; }
+.uid-character { border: 1px solid #405273; border-radius: 12px; padding: 16px; background: #0b1526; overflow-wrap: anywhere; }
+.uid-character > img { width: 64px; height: 64px; object-fit: contain; float: right; }
+.uid-character h3 { font-size: 18px; font-weight: 800; color: #d9e4ff; }
+.uid-character dl { margin: 12px 0; font-size: 12px; }
+.uid-character dl > div { display: flex; justify-content: space-between; gap: 12px; }
+.uid-character dd { font-weight: 700; }.uid-character summary { cursor: pointer; font-size: 13px; color: #c2d3ff; }
+#uid-sync-status { margin-top: 12px; color: #acbdd4; }
 .profile-account { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; font-size: 13px; color: #c9d7f4; }
 .profile-account button { padding: 6px 10px; border: 1px solid #566681; border-radius: 8px; background: #142036; color: #d9e4ff; cursor: pointer; }
 #app-content[inert] { visibility: hidden; }

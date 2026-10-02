@@ -1,7 +1,28 @@
+# Local tools, logs, caches and generated output
 /tmp/
 node_modules/
 *.log
 /backend/target/
-/backend/.env
-
 /dist/
+.wrangler/
+.cache/
+.npm/
+coverage/
+*.tsbuildinfo
+
+# Local credentials; keep documented examples
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# OS and editor temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.vs/
+.idea/workspace.xml
+.idea/shelf/

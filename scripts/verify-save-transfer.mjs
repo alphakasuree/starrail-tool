@@ -61,7 +61,7 @@ function browser() {
     callbacks.get('DOMContentLoaded')(); vm.runInContext(uiSource, context);
     const action = (id, event = 'click') => callbacks.get(`${id}:${event}`)();
     const login = id => {get('profile-login-id').value = id; callbacks.get('profile-login-form:submit')({preventDefault() {}});};
-    login('destination');
+    get('profile-login-mode').value = 'local'; login('destination');
     return {context, stored, get, action, login, key, notifications, downloads, revoked, deny(value) {denied = value;}};
 }
 const b = browser(), storage = b.context.HonkaiProfileStorage;

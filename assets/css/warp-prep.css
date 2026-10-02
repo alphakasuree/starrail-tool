@@ -108,14 +108,14 @@
 }
 
 /* Compact planning workspace with a persistent calculate action. */
-#prep-screen { padding: 20px 24px 0; scroll-padding-bottom: 110px; }
-.prep-shell { padding-bottom: 110px; }
+#prep-screen { padding: 20px 24px 0; scroll-padding-bottom: 80px; }
+.prep-shell { padding-bottom: 28px; }
 .prep-header { margin-bottom: 14px; }
 #prep-heading { font-size: 28px; margin: 4px 0; }
 .prep-shell > .prep-eyebrow { margin: 0; }
 .prep-shell > .prep-muted { margin: 4px 0 0; }
 .prep-layout { margin-top: 16px; }
-.prep-workspace { gap: 14px; align-items: stretch; }
+.prep-workspace { gap: 14px; align-items: start; }
 .prep-panel { padding: 16px 18px; border-radius: 14px; }
 .prep-panel h2 { font-size: 18px; margin-bottom: 10px; }
 .prep-panel label { margin: 8px 0 5px; }
@@ -124,7 +124,7 @@
 .prep-state .prep-check { margin-bottom: 0; }
 .prep-search-fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 12px; }
 .prep-search-fields > * { min-width: 0; }
-.prep-search-results { max-height: 240px; scrollbar-gutter: stable; }
+.prep-search-results { max-height: 220px; scrollbar-gutter: stable; }
 .prep-goal { padding: 12px; margin-top: 10px; }
 .prep-goal-header img { width: 36px; height: 44px; }
 .prep-goal-header h3 { font-size: 17px; margin-top: 0; }

@@ -31,6 +31,7 @@ function browser({ blocked = false } = {}) {
     assert.equal(context.HonkaiBackendConfig.baseUrl, '');
     vm.runInContext(source, context);
     listeners.get('DOMContentLoaded')();
+    get('profile-login-mode').value = 'local';
     return { context, get, login(id) {
         get('profile-login-id').value = id;
         listeners.get('profile-login-form:submit')({ preventDefault() {} });

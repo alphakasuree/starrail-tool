@@ -1,3 +1,5 @@
-// The default site runs entirely in the browser, with ID-scoped localStorage.
-// Backend/account code is retained separately for a future server deployment.
+// Simulator saves use ID-scoped localStorage; public UID lookup uses a relay.
+// The authenticated account backend remains separate from public profile lookup.
 globalThis.HonkaiBackendConfig = Object.freeze({ baseUrl: '' });
+// Local server relay. For static hosting, set this to your deployed Worker URL.
+globalThis.HonkaiUidConfig = Object.freeze({ baseUrl: '/api/hsr' });

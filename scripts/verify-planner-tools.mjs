@@ -34,11 +34,36 @@ for(const name of ['characters.js','profile-storage.js','account-tools.js','plan
     if(name==='relic-calculator.js'){const doc=context.document;delete context.document;vm.runInContext(await read(name),context);context.document=doc;}
     else vm.runInContext(await read(name),context);
 }
-events.get('DOMContentLoaded')[0]();get('profile-login-id').value='test-account';await emit('profile-login-form','submit',{preventDefault(){}});
-await emit('account-characters','change',{target:{dataset:{id:'1308',field:'owned'},checked:true}});
-await emit('account-characters','change',{target:{dataset:{id:'1308',field:'e'},value:'2'}});
-await emit('account-characters','change',{target:{dataset:{id:'1308',field:'s'},value:'3'}});
+events.get('DOMContentLoaded')[0]();get('profile-login-mode').value='local';get('profile-login-id').value='test-account';await emit('profile-login-form','submit',{preventDefault(){}});
+await emit('collection-render-area','change',{target:{dataset:{id:'1308',field:'owned'},checked:true}});
+await emit('collection-render-area','change',{target:{dataset:{id:'1308',field:'e'},value:'2'}});
+await emit('collection-render-area','change',{target:{dataset:{id:'1308',field:'s'},value:'3'}});
 assert.equal(context.HonkaiAccount.get('1308').e,2);assert.equal(context.HonkaiAccount.get('1308').s,3);assert(context.HonkaiAccount.owned().has('1308'));
+// The collection uses manual account data, including after simulated pulls.
+const appSource=await read('app.js');
+context.escapeHTML=s=>String(s);context.collectionItems=vm.runInContext('characterCatalog',context);
+get('collection-rarity').value='all';
+vm.runInContext('let currentTab="character";'+appSource.slice(appSource.indexOf('        function generateGridHTML('),appSource.indexOf('        // 앱 초기 구동')),context);
+context.renderCollection();
+assert.match(get('collection-render-area').innerHTML,/data-field="owned"/);
+assert.match(get('collection-render-area').innerHTML,/value="2" selected/);
+get('collection-owned-filter').checked=true;await emit('collection-owned-filter','change');
+assert.match(get('collection-count').textContent,/1명 보유 · 1 \//);
+get('collection-search').value='없는 캐릭터';context.renderCollection();assert.match(get('collection-render-area').innerHTML,/검색 결과가 없습니다/);
+get('collection-search').value='';get('collection-owned-filter').checked=false;
+context.banners={character:{featured:context.collectionItems.find(c=>c.id==='1310'),rateUp:1,pool4Up:[]}};
+context.getWarpProbabilities=()=>({five:1,four:0});context.saveWarpProgress=()=>{};
+vm.runInContext('let activeBanner="character",activeStateKey="character",pity5=0,pity4=0,guaranteed5=true,guaranteed4=false;let warpHistory={character:[]};'+appSource.slice(appSource.indexOf('        function pullSingle()'),appSource.indexOf('        function updateUI()')),context);
+const accountBeforePull=JSON.stringify([...context.HonkaiAccount.owned()]);
+context.pullSingle();context.renderCollection();
+assert.equal(context.HonkaiAccount.get('1310').owned,false);
+assert.equal(JSON.stringify([...context.HonkaiAccount.owned()]),accountBeforePull);
+assert.equal(vm.runInContext('warpHistory.character.length',context),1);
+vm.runInContext(await read('light-cones.js'),context);
+context.collectionItems=vm.runInContext('[...characterCatalog,...lightConeCatalog]',context);
+vm.runInContext('currentTab="lightcone"',context);context.renderCollection();assert.equal(get('collection-owned-label').hidden,true);
+assert.doesNotMatch(get('collection-render-area').innerHTML,/col-item locked|data-field="owned"/);
+vm.runInContext('currentTab="character"',context);
 const storage=context.HonkaiProfileStorage;
 const before=storage.snapshot();storage.renameProfile('새이름');assert.equal(storage.id,'새이름');assert.deepEqual(storage.snapshot(),before);assert.equal(saved.get('honkai-id-v1:test-account:account'),undefined);
 assert.throws(()=>storage.renameProfile('../bad'));

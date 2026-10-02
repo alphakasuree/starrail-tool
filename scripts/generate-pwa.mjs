@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
-const root=fileURLToPath(new URL('../',import.meta.url));
+export async function generatePwa(root) {
 const files=['index.html','manifest.webmanifest','assets/favicon.svg'];
 for(const dir of ['assets/js','assets/css','assets/characters','assets/lightcones','assets/icons','assets/paths']) {
     for(const file of await fs.readdir(path.join(root,dir))) if(/\.(js|css|png|svg|webp)$/.test(file)) files.push(`${dir}/${file}`);
@@ -39,3 +39,5 @@ self.addEventListener('fetch',event=>{
 });
 `);
 console.log(`PWA shell ${revision}: ${files.length} assets`);
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await generatePwa(fileURLToPath(new URL('../',import.meta.url)));

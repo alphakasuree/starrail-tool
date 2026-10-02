@@ -19,7 +19,36 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run build
+      - name: Prepare GitHub Pages UID relay
+        id: uid
+        run: node scripts/configure-uid-worker.mjs
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          UID_API_BASE_URL: ${{ vars.UID_API_BASE_URL }}
+          UID_SITE_ORIGIN: ${{ vars.UID_SITE_ORIGIN }}
+          UID_WORKER_NAME: ${{ vars.UID_WORKER_NAME }}
+      - name: Deploy UID relay to Cloudflare
+        if: steps.uid.outputs.deploy_worker == 'true'
+        id: uid-worker
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.136.3'
+          command: deploy --config tmp/uid-deploy/wrangler.json
+      - name: Verify deployed UID relay
+        run: node scripts/verify-uid-deployment.mjs
+        env:
+          UID_API_BASE_URL: ${{ steps.uid.outputs.api_base_url }}
+          UID_WORKER_URL: ${{ steps.uid-worker.outputs.deployment-url }}
+          UID_SITE_ORIGIN: ${{ steps.uid.outputs.site_origin }}
+      - name: Build Pages with deployed UID relay URL
+        run: npm run build
+        env:
+          UID_API_BASE_URL: ${{ steps.uid.outputs.api_base_url }}
+          UID_WORKER_URL: ${{ steps.uid-worker.outputs.deployment-url }}
+          UID_REQUIRE_PUBLIC: '1'
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
