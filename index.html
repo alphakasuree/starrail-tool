@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="assets/css/profile-storage.css">
     <link rel="stylesheet" href="assets/css/team-builder.css">
     <link rel="stylesheet" href="assets/css/warp-cinematic.css">
+    <link rel="stylesheet" href="assets/css/warp-prep.css">
+    <script src="assets/js/warp-prep-math.js"></script>
     <style>
         /* 폰트: 영어/숫자는 Orbitron, 한글은 Noto Sans KR */
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Noto+Sans+KR:wght@300;500;700;900&display=swap');
@@ -364,7 +366,7 @@
 
     <!-- 1. 메인 로비 화면 (신규 추가) -->
     <div id="lobby-screen" class="screen flex-col justify-center items-center p-4 md:p-8">
-        <div class="profile-account"><span id="profile-current-id"></span><button id="profile-change" type="button">아이디 변경</button></div>
+        <div class="profile-account"><span id="profile-current-id"></span><button id="profile-save-open" type="button">세이브 내보내기·가져오기</button><button id="profile-change" type="button">아이디 변경</button></div>
         <p id="profile-account-status" role="status" aria-live="polite"></p>
         <h1 class="font-orbitron text-4xl md:text-5xl font-black mb-10 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-white to-blue-300 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
             Honkai: Star Rail
@@ -391,6 +393,9 @@
             </button>
             <!-- 우측 사이드 메뉴 -->
             <div class="lobby-menu flex-1 flex flex-col gap-4">
+                <button id="prep-lobby-button" type="button" onclick="openWarpPrep()" class="prep-lobby-button">
+                    <span aria-hidden="true">✦</span><strong>픽업 준비 계산기</strong><small>필요 성옥 · 목표 확률 · 가상 추첨</small>
+                </button>
                 <button onclick="openCollection()" class="flex-1 rounded-2xl bg-gradient-to-br from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 border-2 border-gray-700 hover:border-blue-400 flex flex-col items-center justify-center text-xl md:text-2xl font-bold transition-all shadow-lg group">
                     <span class="text-4xl mb-2 group-hover:-translate-y-1 transition-transform">📖</span>
                     <span class="text-gray-200 group-hover:text-white">도감 (Collection)</span>
@@ -755,6 +760,7 @@
             selectBanner(activeBanner);
         }
         globalThis.addEventListener('honkai-profile-login',loadWarpProgress);
+        globalThis.addEventListener('honkai-save-imported',loadWarpProgress);
 
         function saveWarpProgress() {
             if (!HonkaiProfileStorage.id) return;
@@ -768,10 +774,7 @@
 
         function getWarpProbabilities() {
             const banner = banners[activeBanner];
-            let five = banner.base5;
-            if (pity5 >= banner.softPity) five += banner.softStep * (pity5 - banner.softPity + 1);
-            if (pity5 >= banner.maxPity - 1) five = 1;
-            five = Math.min(1, Math.max(0, five));
+            const five = WarpPrepMath.fiveProbability(pity5, banner);
             const four = Math.min(1 - five, pity4 >= 9 ? 1 : banner.base4);
             return { five, four, three: Math.max(0, 1 - five - four) };
         }
@@ -1398,6 +1401,55 @@
     <script src="assets/js/team-synergy-data.js"></script>
     <script src="assets/js/team-meta-presets.js"></script>
     <script src="assets/js/team-builder.js"></script>
+    <section id="prep-screen" aria-labelledby="prep-heading" hidden>
+        <div class="prep-shell">
+            <header class="prep-header"><button id="prep-back" type="button">‹ 로비로 돌아가기</button><span>WARP PLANNER / 01</span></header>
+            <p class="prep-eyebrow">별빛으로 준비하는 다음 여정</p>
+            <h1 id="prep-heading">픽업 준비 계산기</h1>
+            <p class="prep-muted">캐릭터 돌파부터 전용 광추 중첩까지, 여러 목표를 원하는 순서로 준비하세요.</p>
+            <div class="prep-layout">
+                <form id="prep-form" class="prep-panel">
+                    <h2>1. 보유 재화</h2>
+                    <div class="prep-fields">
+                        <div><label for="prep-jade">보유 성옥</label><input id="prep-jade" type="number" min="0" max="100000000" step="1" value="0" required></div>
+                        <div><label for="prep-tickets">전용 티켓</label><input id="prep-tickets" type="number" min="0" max="1000000" step="1" value="0" required></div>
+                    </div>
+                    <p class="prep-muted">성옥·별의 궤도 전용 티켓은 모든 목표가 함께 사용합니다.</p>
+                    <h2 class="prep-section-heading">2. 배너별 천장·확정</h2>
+                    <div id="prep-states"></div>
+                    <button id="prep-import" type="button" class="prep-secondary">이 사이트의 배너별 천장·확정 불러오기</button>
+                    <p class="prep-muted">천장 = 마지막 ★5 이후 뽑은 횟수. 캐릭터와 광추는 따로 유지되며 같은 종류의 이벤트 픽업끼리 공유합니다. 목표에 추가한 종류만 입력할 수 있습니다.</p>
+                    <h2 class="prep-section-heading">3. 목표 검색·추가</h2>
+                    <label for="prep-kind">추가할 목표 종류</label><select id="prep-kind"><option value="character">★5 캐릭터</option><option value="lightcone">★5 광추 · 전용 광추</option></select>
+                    <label for="prep-search">캐릭터 / 광추 검색</label><input id="prep-search" type="search" placeholder="이름 또는 운명의 길 검색" autocomplete="off">
+                    <p id="prep-search-count" class="prep-muted" role="status" aria-live="polite"></p>
+                    <div id="prep-search-results" class="prep-search-results"></div>
+                    <p class="prep-muted">전광도 광추 목록에서 이름으로 검색해 추가하세요. 과거·콜라보 픽업도 계획할 수 있으며 현재 배너 개방 여부는 반영하지 않습니다.</p>
+                    <button id="prep-submit" type="submit" class="prep-primary">전체 계산 · 10,000번 가상 추첨 ↗</button>
+                    <p id="prep-error" role="alert"></p>
+                </form>
+                <div class="prep-output">
+                    <div class="prep-panel"><h2>4. 뽑기 우선순위</h2><p class="prep-muted">위에서부터 목표를 완료한 뒤 다음 목표를 뽑습니다. 현재 보유 상태와 목표를 각각 설정하세요. 최대 12개.</p><div id="prep-goals"></div><p id="prep-plan-summary" class="prep-muted" aria-live="polite"></p></div>
+                    <div id="prep-result" class="prep-panel" hidden></div>
+                    <div id="prep-simulation" class="prep-panel" role="status" aria-live="polite">준비 상황을 입력하고 계산을 눌러주세요.</div>
+                    <details class="prep-panel prep-method"><summary>계산 기준</summary><p>성옥 160개 = 1회. 이 사이트의 캐릭터 모델은 ★5 기본 0.6%, 74회째부터 6%p 증가, 최대 90회 천장, 픽업 50%입니다. 광추 모델은 ★5 기본 0.8%, 64회째부터 7%p 증가, 최대 80회 천장, 픽업 75%입니다. 픽업을 놓치면 다음 ★5는 목표 픽업 확정입니다.</p><p>캐릭터는 미보유 → 명함에 1장, 명함 → 2돌에 2장, 1돌 → 2돌에 1장이 필요합니다. 광추는 미보유 → 1중첩에 1장, 1중첩 → 5중첩에 4장이 필요합니다. 동일한 목표 상태는 추가 0장으로 계산됩니다.</p><p>같은 천장 그룹의 첫 미달성 목표에만 입력한 천장·확정이 적용됩니다. 목표를 얻으면 천장과 확정이 초기화되므로 이후 같은 그룹의 목표는 0회·비확정에서 시작합니다. 캐릭터·광추·콜라보 캐릭터·콜라보 광추는 각각 독립입니다. 목표별 확률은 해당 목표까지 앞선 목표를 모두 순서대로 완료할 확률입니다.</p><p>소프트 천장은 시뮬레이터의 가정이며 실제 게임 결과와 다를 수 있습니다. 확률 분포 계산값과 가상 추첨 결과를 함께 제공합니다. 환급·상점 교환·미래 재화·픽업 외 획득으로 다른 목표를 달성하는 경우는 포함하지 않습니다. 현재 보유 돌파·중첩은 직접 입력하세요.</p></details>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="assets/js/warp-prep.js"></script>
+    <dialog id="save-dialog" aria-labelledby="save-heading">
+        <div class="save-shell">
+            <header class="save-header"><div><small>LOCAL SAVE / TRANSFER</small><h2 id="save-heading">세이브 내보내기·가져오기</h2></div><button id="save-close" type="button" aria-label="세이브 관리 닫기">✕</button></header>
+            <p id="save-owner" class="save-muted"></p>
+            <section class="save-card"><h3>1. 파일로 내보내기</h3><p class="save-muted">워프 기록·천장·픽업 선택·보유 목록·저장한 유물 세팅·파티를 JSON 파일 하나에 담습니다. 입력만 하고 저장하지 않은 세팅과 픽업 준비 계획은 포함하지 않습니다.</p><div id="save-current-summary"></div><button id="save-export" type="button" class="save-primary">현재 세이브 다운로드 ↓</button></section>
+            <section class="save-card"><h3>2. 다른 기기의 세이브 가져오기</h3><p class="save-muted">다른 기기에서 이 사이트에 접속하고 아이디를 입력한 뒤 파일을 선택하세요. 파일의 원래 아이디와 달라도 현재 접속한 아이디로 가져올 수 있습니다. 파일은 이 브라우저에서만 읽습니다.</p><label for="save-file">세이브 파일 선택 (.json, 최대 20MB)</label><input id="save-file" type="file" accept=".json,application/json"><div id="save-preview" hidden><p id="save-file-info" class="save-muted"></p><div id="save-incoming-summary"></div><label class="save-check"><input id="save-replace-check" type="checkbox"><span id="save-replace-label"></span></label><p class="save-muted">병합하지 않고 파일 내용 전체로 교체합니다. 가져오기 전 세이브는 이 브라우저에 한 번 되돌릴 수 있도록 보관합니다.</p><button id="save-import" type="button" class="save-primary" disabled>미리본 세이브 가져오기 ↑</button></div></section>
+            <section id="save-undo-panel" class="save-card" hidden><h3>가져오기 전 세이브 복구</h3><p id="save-undo-info" class="save-muted"></p><p class="save-muted">가져오기 이후의 변경도 가져오기 전 상태로 교체됩니다.</p><button id="save-undo" type="button" class="save-secondary">가져오기 전 세이브로 되돌리기</button></section>
+            <p id="save-status" role="status" aria-live="polite"></p><p id="save-error" role="alert"></p>
+        </div>
+    </dialog>
+    <script src="assets/js/save-format.js"></script>
+    <script src="assets/js/save-transfer.js"></script>
     </div>
 </body>
 </html>

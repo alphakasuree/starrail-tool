@@ -8,12 +8,64 @@
         if (!sections.has(section)) throw new Error('저장 영역이 잘못되었습니다.');
         return `${prefix}${encodeURIComponent(activeId)}:${section}`;
     }
+    function bundleKey() {
+        if (!activeId) throw new Error('아이디를 입력하고 접속하세요.');
+        return `${prefix}${encodeURIComponent(activeId)}:save-bundle`;
+    }
+    function readBundle() {
+        const raw = localStorage.getItem(bundleKey());
+        if (raw === null) return null;
+        const bundle = JSON.parse(raw);
+        if (bundle?.version !== 1 || !bundle.sections) throw new Error('세이브 저장 데이터를 읽을 수 없습니다.');
+        checkSections(bundle.sections);
+        return bundle;
+    }
+    function checkSections(values) {
+        if (!values || typeof values !== 'object' || Array.isArray(values) || Object.keys(values).length !== sections.size) throw new Error('세이브 저장 영역이 올바르지 않습니다.');
+        for (const section of sections) if (!Object.hasOwn(values, section) || (values[section] !== null && typeof values[section] !== 'string')) throw new Error('세이브 저장 영역이 올바르지 않습니다.');
+    }
+    function snapshot() {
+        const bundle = readBundle();
+        return bundle ? {...bundle.sections} : Object.fromEntries([...sections].map(section => [section, localStorage.getItem(storageKey(section))]));
+    }
     globalThis.HonkaiProfileStorage = Object.freeze({
         get id() { return activeId; },
-        getItem(section) { return activeId ? localStorage.getItem(storageKey(section)) : null; },
+        getItem(section) {
+            if (!activeId) return null;
+            const key = storageKey(section);
+            const bundle = readBundle();
+            return bundle ? bundle.sections[section] : localStorage.getItem(key);
+        },
         // Keep writes synchronous so the warp screen can catch storage failures.
         // Relic/team callers may also await this method.
-        setItem(section, value) { localStorage.setItem(storageKey(section), value); }
+        setItem(section, value) {
+            const key = storageKey(section), bundle = readBundle();
+            if (bundle) {
+                bundle.sections[section] = String(value);
+                localStorage.setItem(bundleKey(), JSON.stringify(bundle));
+            } else localStorage.setItem(key, value);
+        },
+        snapshot,
+        importSections(values, expected) {
+            checkSections(values);
+            const before = snapshot();
+            if (expected && JSON.stringify(before) !== JSON.stringify(expected)) throw new Error('미리보기 이후 저장 내용이 변경되었습니다. 파일을 다시 선택해주세요.');
+            // One localStorage write commits all sections and the recovery copy together.
+            // Quota/write failures leave the previous save completely intact.
+            localStorage.setItem(bundleKey(), JSON.stringify({version: 1, sections: values, previous: {sections: before, savedAt: new Date().toISOString()}}));
+        },
+        getPrevious() {
+            if (!activeId) return null;
+            const previous = readBundle()?.previous;
+            if (!previous) return null;
+            checkSections(previous.sections);
+            return {sections: {...previous.sections}, savedAt: previous.savedAt};
+        },
+        restorePrevious() {
+            const previous = this.getPrevious();
+            if (!previous) throw new Error('되돌릴 세이브가 없습니다.');
+            localStorage.setItem(bundleKey(), JSON.stringify({version: 1, sections: previous.sections, previous: null}));
+        }
     });
     document.addEventListener('DOMContentLoaded', () => {
         const get = id => document.getElementById(id);

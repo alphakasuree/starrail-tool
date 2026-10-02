@@ -39,11 +39,15 @@ JS·CSS 경로를 이동하면 `index.html` 참조도 함께 수정하세요. JS
 
 ## 검증
 
+로비 상단의 **세이브 내보내기·가져오기**에서 기록·천장·보유 목록·저장한 유물 세팅·파티를 JSON 파일로 옮길 수 있습니다. 다른 기기에서 아이디로 접속한 뒤 파일을 가져오면 해당 아이디에 적용됩니다. 자세한 범위와 파일 형식은 [세이브 이동 안내](docs/SAVE-TRANSFER.md)를 참고하세요.
+
 Node.js가 설치된 환경에서:
 
 ```sh
 node scripts/verify.mjs
 node scripts/verify-local-profile.mjs
+node scripts/verify-warp-prep.mjs
+node scripts/verify-save-transfer.mjs
 ```
 
 JS 구문, 로컬 리소스 경로와 대소문자, 카탈로그 일러스트, 이미지 대체 로직과 아이디별 로컬 저장을 확인합니다. 실제 모바일 브라우저의 시각 검증은 별도로 필요합니다.
