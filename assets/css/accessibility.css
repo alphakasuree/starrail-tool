@@ -1,0 +1,7 @@
+:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    .star { animation: none !important; opacity: .5; }
+    .anim-pop, .summary-card.reveal, #single-card-container .warp-reveal-enter { opacity: 1 !important; transform: none !important; }
+    .btn:hover { transform: none; }
+}

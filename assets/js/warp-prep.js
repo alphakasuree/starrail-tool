@@ -15,7 +15,7 @@
     const description = goal => `${stage(goal.kind, goal.current)} → ${stage(goal.kind, goal.target)}`;
     get('prep-states').innerHTML = groups.map(group => `<fieldset id="prep-state-${group.key}" class="prep-state"><legend>${group.name}</legend><label for="prep-pity-${group.key}">현재 ★5 천장 (0~${banners[group.kind].maxPity - 1})</label><input id="prep-pity-${group.key}" type="number" min="0" max="${banners[group.kind].maxPity - 1}" step="1" value="0" required><label class="prep-check"><input id="prep-guaranteed-${group.key}" type="checkbox"><span>다음 ★5 픽업 확정</span></label></fieldset>`).join('');
     function read() {
-        return {jade: get('prep-jade').valueAsNumber, tickets: get('prep-tickets').valueAsNumber,
+        return {jade: get('prep-jade').valueAsNumber + (globalThis.HonkaiForecast?.jade() || 0), tickets: get('prep-tickets').valueAsNumber,
             goals: goals.map(goal => ({...goal})),
             states: Object.fromEntries(groups.map(group => [group.key, {pity: get(`prep-pity-${group.key}`).valueAsNumber, guaranteed: get(`prep-guaranteed-${group.key}`).checked}]))};
     }
@@ -68,15 +68,17 @@
         get(`prep-current-${goals.length - 1}`).focus();
     }
     function render(input, result) {
-        const rows = [.5, .9, .95, 1].map(probability => {
+        const rows = [.5, .75, .9, .95, 1].map(probability => {
             const pulls = probability === 1 ? result.worst : result.quantile(probability);
             return `<tr><td>${probability === 1 ? '천장 보장' : percent(probability)}</td><td>${number(pulls)}회</td><td>${number(pulls * math.COST)}</td><td>${number(result.shortage(pulls))}</td></tr>`;
         }).join('');
         const milestones = [...new Set([0, result.budget, ...[.25, .5, .75, 1].map(f => Math.ceil(result.worst * f))])].sort((a, b) => a - b);
         get('prep-result').innerHTML = `<p class="prep-eyebrow">${goals.length}개 목표 · 추가 ${goals.reduce((sum, goal) => sum + math.neededCopies(goal.kind, goal.current, goal.target), 0)}장</p><h2>모든 목표를 달성할 확률</h2><p class="prep-hero">${percent(result.probability)}</p><p class="prep-muted">보유 재화로 ${number(result.budget)}회 가능 · 전용 티켓 ${number(input.tickets)}장 + 성옥 ${number(input.jade)}개<br>성옥을 워프로 바꾼 뒤 잔여 ${number(input.jade % math.COST)}개</p><div class="prep-metrics"><div><small>전체 목표 보장까지 최대</small><strong>${number(result.worst)}회</strong></div><div><small>전체 보장에 부족한 성옥</small><strong>${number(result.shortage(result.worst))}개</strong></div></div>
-            <h2>순서별 목표 완료 가능성</h2><div class="prep-table-wrap"><table class="prep-table"><thead><tr><th scope="col">목표</th><th scope="col">추가</th><th scope="col">누적 확률</th><th scope="col">누적 최대</th></tr></thead><tbody>${result.rows.map((row, index) => `<tr><td>${index + 1}. ${escapeHTML(choiceFor(row).featured.name)}<small>${description(row)}</small></td><td>${row.copies}장</td><td>${percent(row.probability)}</td><td>${number(row.cumulativeWorst)}회</td></tr>`).join('')}</tbody></table></div><p class="prep-muted">누적 확률 = 보유 재화로 앞선 목표와 해당 목표를 모두 완료할 확률. 우선순위를 바꾸면 각 목표의 완료 가능성이 달라집니다. 이미 보유한 목표는 추가 워프를 소모하지 않습니다.</p>
-            <h2>전체 목표 확률별 필요 재화</h2><div class="prep-table-wrap"><table class="prep-table"><thead><tr><th scope="col">목표 확률</th><th scope="col">필요 워프</th><th scope="col">총 성옥 환산</th><th scope="col">부족 성옥</th></tr></thead><tbody>${rows}</tbody></table></div><p class="prep-muted">전체 목표까지 모델상 평균 ${result.expected.toFixed(1)}회. 부족 성옥은 보유 티켓·성옥을 모두 반영합니다.</p><h2>워프 수에 따른 전체 완료 가능성</h2><div class="prep-curve">${milestones.map(pulls => `<div class="prep-bar-row"><span>${number(pulls)}회</span><div class="prep-bar"><span style="width:${result.cdf[Math.min(pulls, result.worst)] * 100}%"></span></div><span>${percent(result.cdf[Math.min(pulls, result.worst)])}</span></div>`).join('')}</div>`;
+            <details class="prep-detail" open><summary>순서별 목표 완료 가능성</summary><div class="prep-table-wrap"><table class="prep-table"><thead><tr><th scope="col">목표</th><th scope="col">추가</th><th scope="col">누적 확률</th><th scope="col">누적 최대</th></tr></thead><tbody>${result.rows.map((row, index) => `<tr><td>${index + 1}. ${escapeHTML(choiceFor(row).featured.name)}<small>${description(row)}</small></td><td>${row.copies}장</td><td>${percent(row.probability)}</td><td>${number(row.cumulativeWorst)}회</td></tr>`).join('')}</tbody></table></div><p class="prep-muted">누적 확률 = 보유 재화로 앞선 목표와 해당 목표를 모두 완료할 확률. 우선순위를 바꾸면 각 목표의 완료 가능성이 달라집니다. 이미 보유한 목표는 추가 워프를 소모하지 않습니다.</p>
+            </details><details class="prep-detail"><summary>확률별 필요 재화 보기</summary><div class="prep-table-wrap"><table class="prep-table"><thead><tr><th scope="col">목표 확률</th><th scope="col">필요 워프</th><th scope="col">총 성옥 환산</th><th scope="col">부족 성옥</th></tr></thead><tbody>${rows}</tbody></table></div><p class="prep-muted">전체 목표까지 모델상 평균 ${result.expected.toFixed(1)}회. 부족 성옥은 보유 티켓·성옥을 모두 반영합니다.</p></details><details class="prep-detail"><summary>워프 수에 따른 확률 그래프</summary><div class="prep-curve">${milestones.map(pulls => `<div class="prep-bar-row"><span>${number(pulls)}회</span><div class="prep-bar"><span style="width:${result.cdf[Math.min(pulls, result.worst)] * 100}%"></span></div><span>${percent(result.cdf[Math.min(pulls, result.worst)])}</span></div>`).join('')}</div></details>`;
         get('prep-result').hidden = false;
+        get('prep-output').scrollIntoView({block: 'start', behavior: 'instant'});
+
     }
     async function simulate(result, token) {
         const total = 10000, samples = [], counts = result.rows.map(() => 0);
@@ -97,7 +99,7 @@
         const rate = successes / total, z = 1.96, denominator = 1 + z * z / total;
         const center = (rate + z * z / (2 * total)) / denominator;
         const margin = z * Math.sqrt(rate * (1 - rate) / total + z * z / (4 * total * total)) / denominator;
-        get('prep-simulation').innerHTML = `<h2>10,000번 전체 계획 가상 추첨</h2><p class="prep-hero">${percent(rate)}</p><p class="prep-muted">모든 목표 완료 ${number(successes)} / ${number(total)}번<br>확률의 95% 신뢰구간 ${percent(Math.max(0, center - margin))} ~ ${percent(Math.min(1, center + margin))}<br>전체 목표까지 평균 ${(sum / total).toFixed(1)}회 · 중앙값 ${number(samples[4999])}회 · 90%가 ${number(samples[8999])}회 이내 완료</p><div class="prep-curve">${result.rows.map((row, index) => `<div class="prep-sim-row"><span>${index + 1}. ${escapeHTML(choiceFor(row).featured.name)}</span><strong>${percent(counts[index] / total)}</strong></div>`).join('')}</div><p class="prep-muted">목표별 수치는 앞선 목표까지 완료한 누적 성공률입니다. 매 실험은 입력한 배너별 상태와 같은 보유 재화에서 다시 시작합니다. 실제 기록·보유 목록에는 반영되지 않습니다.</p>`;
+        get('prep-simulation').innerHTML = `<details class="prep-detail"><summary>10,000번 전체 계획 가상 추첨 결과 보기</summary><p class="prep-hero">${percent(rate)}</p><p class="prep-muted">모든 목표 완료 ${number(successes)} / ${number(total)}번<br>확률의 95% 신뢰구간 ${percent(Math.max(0, center - margin))} ~ ${percent(Math.min(1, center + margin))}<br>전체 목표까지 평균 ${(sum / total).toFixed(1)}회 · 중앙값 ${number(samples[4999])}회 · 90%가 ${number(samples[8999])}회 이내 완료</p><div class="prep-curve">${result.rows.map((row, index) => `<div class="prep-sim-row"><span>${index + 1}. ${escapeHTML(choiceFor(row).featured.name)}</span><strong>${percent(counts[index] / total)}</strong></div>`).join('')}</div><p class="prep-muted">목표별 수치는 앞선 목표까지 완료한 누적 성공률입니다. 매 실험은 입력한 배너별 상태와 같은 보유 재화에서 다시 시작합니다. 실제 기록·보유 목록에는 반영되지 않습니다.</p></details>`;
         get('prep-submit').disabled = false;
     }
     get('prep-search').addEventListener('input', renderSearch);
@@ -173,4 +175,24 @@
         if (!get('prep-screen').hidden) globalThis.closeWarpPrep();
     });
     renderGoals(); renderSearch();
+    globalThis.WarpPrepUI = Object.freeze({
+        plan: () => ({goals:goals.map(g=>({...g})),states:read().states}),
+        apply(plan) {
+            if (!plan || !Array.isArray(plan.goals) || plan.goals.length>12 || !plan.states) throw new Error('공유 뽑기 계획 형식이 올바르지 않습니다.');
+            const next=plan.goals.map(goal=>{
+                const choice=pickupChoices[goal.kind]?.find(c=>c.id===goal.id);
+                if (!choice || !Number.isInteger(goal.current) || !Number.isInteger(goal.target)) throw new Error('공유 목표를 확인하세요.');
+                math.neededCopies(goal.kind,goal.current,goal.target);
+                return {kind:goal.kind,id:goal.id,current:goal.current,target:goal.target,collaboration:Boolean(choice.collaboration)};
+            });
+            if(new Set(next.map(g=>`${g.kind}:${g.id}`)).size!==next.length) throw new Error('중복 목표입니다.');
+            for(const group of groups) {
+                const state=plan.states[group.key];
+                if(!state || !Number.isInteger(state.pity) || state.pity<0 || state.pity>=banners[group.kind].maxPity || typeof state.guaranteed!=='boolean') throw new Error('공유 천장 정보를 확인하세요.');
+            }
+            goals=next;
+            for(const group of groups) {get(`prep-pity-${group.key}`).value=plan.states[group.key].pity;get(`prep-guaranteed-${group.key}`).checked=plan.states[group.key].guaranteed;}
+            invalidate();renderGoals();renderSearch();
+        }
+    });
 })();

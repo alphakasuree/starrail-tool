@@ -66,6 +66,9 @@
         ctx.globalAlpha=1;
     }
     function start({rarity=3,count=1,featured,onComplete}) {
+        if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+            stop(); timer=setTimeout(() => {timer=0; get('anim-screen').style.display='none'; onComplete?.();}, 0); return;
+        }
         stop();scene=get('warp-cinema');canvas=get('warp-space');signalOpen=get('warp-signal-open');
         rarity=[3,4,5].includes(rarity) ? rarity : 3;count=count===10 ? 10 : 1;
         ctx=canvas.getContext('2d');resize();currentStage='';speed=.12;active=true;done=onComplete;
@@ -89,7 +92,7 @@
                 signalOpen.hidden=true;signalOpen.onclick=null;resume();
             };
         };
-        // Keep the cinematic and timing identical across OS animation settings.
+        // Default motion keeps the original cinematic and timing.
         stars=Array.from({length:width<600 ? 90 : 170},()=>({angle:Math.random()*Math.PI*2,distance:.03+Math.random()*.6,z:.12+Math.random()*.88,size:.5+Math.random()}));
         started=performance.now();let previous=started;
         const burstAt=rarity===5 ? 4300 : rarity===4 ? 3400 : 3250;

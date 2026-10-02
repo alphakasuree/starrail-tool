@@ -1,0 +1,12 @@
+{
+  "name": "honkai-warp-simulator",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.cjs -i assets/css/tailwind-input.css -o assets/css/tailwind.css --minify",
+    "build": "npm run build:css && node scripts/build-pages.mjs",
+    "test": "node scripts/verify.mjs && node scripts/verify-local-profile.mjs && node scripts/verify-warp-prep.mjs && node scripts/verify-save-transfer.mjs && node scripts/verify-ui-events.mjs && node scripts/verify-viewport-scale.mjs && node scripts/verify-planner-tools.mjs"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

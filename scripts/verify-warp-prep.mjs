@@ -114,7 +114,7 @@ function element(id) {
         value: '0', get valueAsNumber() {return Number(this.value);}, hidden: true, style: {}, checked: false, disabled: false,
         textContent: '', innerHTML: '', handlers: {},
         addEventListener(type, callback) { this.handlers[type] = callback; },
-        append() {}, focus() {}
+        append() {}, focus() {}, scrollIntoView(options) { this.scrollOptions = options; }
     });
     return elements.get(id);
 }
@@ -162,6 +162,7 @@ element('prep-tickets').value = 10000;
 await element('prep-form').handlers.submit({preventDefault() {}});
 assert.match(element('prep-result').innerHTML, /100\.0%/);
 assert.match(element('prep-result').innerHTML, /테스트 전용 광추/);
+assert.equal(element('prep-output').scrollOptions.block, 'start');
 assert.match(element('prep-simulation').innerHTML, /10,000번 전체 계획 가상 추첨/);
 assert.equal(element('prep-submit').disabled, false);
 const clickAction = (index, action) => element('prep-goals').handlers.click({target: {closest: () => ({disabled: false, dataset: {index, action}})}});

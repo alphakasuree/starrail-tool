@@ -4,7 +4,7 @@
     let pending = null, generation = 0, previousFocus = null;
     const busy = () => typeof isWarping !== 'undefined' && isWarping;
     const count = value => value.toLocaleString('ko-KR');
-    const table = summary => `<div class="save-counts"><div><strong>${count(summary.history)}</strong><span>워프 기록</span></div><div><strong>${count(summary.inventory)}</strong><span>보유 항목</span></div><div><strong>${count(summary.relic)}</strong><span>유물 세팅</span></div><div><strong>${count(summary.teams)}</strong><span>파티</span></div></div>`;
+    const table = summary => `<div class="save-counts"><div><strong>${count(summary.history)}</strong><span>워프 기록</span></div><div><strong>${count(summary.inventory)}</strong><span>시뮬레이터 도감</span></div><div><strong>${count(summary.account)}</strong><span>실제 계정 캐릭터</span></div><div><strong>${count(summary.relic)}</strong><span>유물 세팅</span></div><div><strong>${count(summary.teams)}</strong><span>파티</span></div></div>`;
     function clearPreview() {
         generation++; pending = null; get('save-preview').hidden = true;
         get('save-replace-check').checked = false; get('save-import').disabled = true;
@@ -17,6 +17,8 @@
     function refresh() {
         const save = format.create(storage.id, storage.snapshot());
         get('save-owner').textContent = `현재 저장 대상: ${storage.id} · 이 브라우저`;
+        get('save-profile-name').value = storage.id;
+        get('save-storage-size').textContent = `현재 데이터 ${(new Blob([JSON.stringify(storage.snapshot())]).size/1024).toFixed(1)} KB · 내용 한도 512 KB · 복구 사본 별도`;
         get('save-current-summary').innerHTML = table(format.summary(save));
         const previous = storage.getPrevious();
         get('save-undo-panel').hidden = !previous;
@@ -38,6 +40,10 @@
         }
     });
     get('save-close').addEventListener('click', () => get('save-dialog').close());
+    get('save-profile-rename').addEventListener('click', () => {
+        try {allowed();storage.renameProfile(get('save-profile-name').value);clearPreview();refresh();get('save-status').textContent='프로필 이름을 변경했습니다.';}
+        catch(error) {report(error);}
+    });
     get('save-dialog').addEventListener('close', () => {clearPreview(); previousFocus?.focus();});
     get('save-export').addEventListener('click', () => {
         get('save-error').textContent = ''; get('save-status').textContent = '';
@@ -46,13 +52,13 @@
             allowed();
             const save = format.create(storage.id, storage.snapshot());
             const blob = new Blob([JSON.stringify(save, null, 2) + '\n'], {type: 'application/json;charset=utf-8'});
-            if (blob.size > format.MAX_BYTES) throw new Error('내보낼 세이브가 20MB를 넘습니다.');
             url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             const timestamp = save.exportedAt.replace(/[:.]/g, '-');
             link.href = url; link.download = `honkai-save-${storage.id}-${timestamp}.json`;
             document.body.append(link); link.click(); link.remove();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
+            globalThis.HonkaiAccount?.markExport();
             get('save-status').textContent = '세이브 다운로드를 시작했습니다. 이 파일을 다른 기기로 옮겨 가져오세요.';
         } catch (error) { if (url) URL.revokeObjectURL(url); report(error); }
     });
@@ -62,7 +68,7 @@
         if (!file) return;
         try {
             allowed();
-            if (file.size > format.MAX_BYTES) throw new Error('파일이 너무 큽니다. 최대 20MB 파일을 선택해주세요.');
+            if (file.size > format.MAX_BYTES) throw new Error('파일이 너무 큽니다. 최대 512KB 파일을 선택해주세요.');
             const targetId = storage.id, baseline = storage.snapshot();
             get('save-status').textContent = '파일을 검사하고 있습니다…';
             const save = format.parse(await file.text());
@@ -91,6 +97,21 @@
             allowed(); storage.restorePrevious(); clearPreview(); get('save-file').value = ''; notify(); refresh();
             get('save-status').textContent = '가져오기 전 세이브로 되돌렸습니다.';
         } catch (error) { report(error); }
+    });
+    get('save-clear-backup').addEventListener('click', () => {
+        try {
+            allowed();
+            if (!storage.getPrevious()) {get('save-status').textContent = "삭제할 복구 사본이 없습니다."; return;}
+            if (!globalThis.confirm("가져오기 전 복구 사본을 삭제할까요? 현재 세이브는 유지되며 되돌릴 수 없습니다.")) return;
+            storage.clearPrevious(); refresh(); get('save-status').textContent = "복구 사본을 삭제했습니다.";
+        } catch (error) {report(error);}
+    });
+    get('save-delete-profile').addEventListener('click', () => {
+        try {
+            allowed();
+            if (globalThis.prompt("현재 프로필의 저장 데이터와 복구 사본을 삭제합니다. 백업 후 삭제하려면 프로필 이름을 입력하세요: " + storage.id) !== storage.id) return;
+            storage.deleteProfile(); location.reload();
+        } catch (error) {report(error);}
     });
     globalThis.addEventListener('honkai-profile-login', () => {clearPreview(); if (get('save-dialog').open) get('save-dialog').close();});
 })();

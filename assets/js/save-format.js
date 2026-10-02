@@ -1,6 +1,6 @@
 (() => {
     'use strict';
-    const FORMAT = 'honkai-local-save', VERSION = 1, MAX_BYTES = 20 * 1024 * 1024;
+    const FORMAT = 'honkai-local-save', VERSION = 1, MAX_BYTES = 512 * 1024;
     const groups = ['character', 'lightcone', 'characterCollaboration', 'lightconeCollaboration'];
     const statIds = ['cr', 'cd', 'spd', 'atk', 'hp', 'def', 'break', 'ehr', 'res', 'flatAtk', 'flatHp', 'flatDef'];
     const profiles = ['pdf', 'crit', 'hpCrit', 'defCrit', 'dot', 'break', 'support', 'critSupport', 'atkSupport', 'atkHeal', 'defSupport', 'hpSupport', 'debuff'];
@@ -53,27 +53,37 @@
         require(object(save) && save.format === FORMAT, '이 사이트에서 내보낸 세이브 파일을 선택해주세요.');
         require(save.version === VERSION, '지원하지 않는 세이브 버전입니다. 파일을 내보낸 사이트 버전을 확인해주세요.');
         require(typeof save.profileId === 'string' && /^[\p{L}\p{N}_.-]{1,30}$/u.test(save.profileId) && date(save.exportedAt), '세이브의 아이디·내보낸 날짜가 올바르지 않습니다.');
-        require(object(save.sections) && Object.keys(save.sections).length === 3 && ['warp', 'relic', 'teams'].every(key => Object.hasOwn(save.sections, key)), '워프·유물·파티 저장 영역이 모두 필요합니다.');
+        require(object(save.sections) && Object.keys(save.sections).every(key => ['warp','relic','teams','account'].includes(key)) && ['warp', 'relic', 'teams'].every(key => Object.hasOwn(save.sections, key)), '워프·유물·파티 저장 영역이 모두 필요합니다.');
         inspect(save);
         validateWarp(save.sections.warp); validateRelic(save.sections.relic); validateTeams(save.sections.teams);
+        const account = save.sections.account;
+        if (account !== undefined && account !== null) {
+            require(object(account) && account.version === 1 && object(account.characters) && Object.keys(account.characters).length <= 500 && integer(account.createdAt, 8640000000000000) && (account.lastExportAt === null || integer(account.lastExportAt, 8640000000000000)), '계정 저장 정보가 올바르지 않습니다.');
+            require(Object.entries(account.characters).every(([id,c]) => /^\d{4,6}$/.test(id) && object(c) && typeof c.owned === 'boolean' && integer(c.e,6) && integer(c.s,5)), '계정의 성혼·광추 정보가 올바르지 않습니다.');
+        }
         return save;
     }
     function parse(text) {
-        require(typeof text === 'string' && text.length <= MAX_BYTES, '파일이 너무 큽니다. 최대 20MB 파일을 선택해주세요.');
+        require(typeof text === 'string' && text.length <= MAX_BYTES, '파일이 너무 큽니다. 최대 512KB 파일을 선택해주세요.');
+        let bytes = 0;
+        for (const char of text) {
+            const code = char.codePointAt(0); bytes += code <= 0x7f ? 1 : code <= 0x7ff ? 2 : code <= 0xffff ? 3 : 4;
+            require(bytes <= MAX_BYTES, '파일이 너무 큽니다. 최대 512KB 파일을 선택해주세요.');
+        }
         let save;
         try { save = JSON.parse(text.replace(/^\uFEFF/, '')); } catch { throw new Error('JSON 파일을 읽을 수 없습니다. 파일이 손상되었는지 확인해주세요.'); }
         return validate(save);
     }
     function create(profileId, raw, exportedAt = new Date().toISOString()) {
         let sections;
-        try { sections = Object.fromEntries(['warp', 'relic', 'teams'].map(key => [key, raw[key] === null ? null : JSON.parse(raw[key])])); }
+        try { sections = Object.fromEntries(['warp', 'relic', 'teams', ...(Object.hasOwn(raw,'account') ? ['account'] : [])].map(key => [key, raw[key] === null ? null : JSON.parse(raw[key])])); }
         catch { throw new Error('현재 저장 데이터를 읽을 수 없어 내보내지 못했습니다.'); }
         return validate({format: FORMAT, version: VERSION, profileId, exportedAt, sections});
     }
-    function toRaw(save) { return Object.fromEntries(['warp', 'relic', 'teams'].map(key => [key, save.sections[key] === null ? null : JSON.stringify(save.sections[key])])); }
+    function toRaw(save) { return Object.fromEntries(['warp', 'relic', 'teams', ...(Object.hasOwn(save.sections,'account') ? ['account'] : [])].map(key => [key, save.sections[key] === null ? null : JSON.stringify(save.sections[key])])); }
     function summary(save) {
         const warp = save.sections.warp;
-        return {history: Object.values(warp?.history || {}).reduce((sum, rows) => sum + (Array.isArray(rows) ? rows.length : 0), 0), inventory: Object.keys(warp?.inventory || {}).length, relic: save.sections.relic?.length || 0, teams: save.sections.teams?.length || 0};
+        return {history: Object.values(warp?.history || {}).reduce((sum, rows) => sum + (Array.isArray(rows) ? rows.length : 0), 0), inventory: Object.keys(warp?.inventory || {}).length, account: Object.values(save.sections.account?.characters || {}).filter(c=>c.owned).length, relic: save.sections.relic?.length || 0, teams: save.sections.teams?.length || 0};
     }
     globalThis.HonkaiSaveFormat = Object.freeze({MAX_BYTES, validate, parse, create, toRaw, summary});
 })();

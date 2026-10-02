@@ -44,13 +44,14 @@ for (const reference of references) {
     }
 }
 
-// Regression: OS animation preferences must not change the site's presentation.
-assert.match(html, /#single-card-container\s+\.illustration\s*\{\s*opacity:\s*1\s*;/);
+// Default presentation stays intact; reduced motion has an explicit accessible path.
+assert.match(await read('assets/css/app.css'), /#single-card-container\s+\.illustration\s*\{\s*opacity:\s*1\s*;/);
 const css = await read('assets/css/warp-cinematic.css');
 assert.match(css, /\.warp-reveal-enter\s*\{\s*animation:\s*warp-reveal-enter/);
-for (const name of codeFiles) {
-    assert.doesNotMatch(await read(name), /prefers-reduced-motion|motion-reduce:|motion-safe:/, `OS-dependent animation in ${name}`);
-}
+assert.match(await read('assets/css/accessibility.css'), /prefers-reduced-motion/);
+assert.match(await read('assets/js/warp-cinematic.js'), /prefers-reduced-motion/);
+assert.doesNotMatch(html, /<script(?![^>]*src=)[^>]*>|\son[a-z]+\s*=|cdn\.tailwindcss/);
+assert.match(html, /script-src 'self'/);
 
 const timers = new Map();
 let timerId = 0, preloadCount = 0;
@@ -99,4 +100,4 @@ assert.equal(timers.size, 0);
 
 artwork.preload(Array.from({ length: 10 }, () => item));
 assert.equal(preloadCount, 1);
-console.log(`PASS: JS syntax, ${references.size} asset paths, ${items.length} catalog entries, OS-independent animations, artwork fallback and preload checks.`);
+console.log(`PASS: JS syntax, ${references.size} asset paths, ${items.length} catalog entries, default and reduced-motion support, artwork fallback and preload checks.`);

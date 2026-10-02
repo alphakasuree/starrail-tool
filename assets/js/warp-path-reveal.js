@@ -28,7 +28,7 @@
     function show({item, container, onReveal}) {
         stop();
         const path = paths[item.path];
-        if (!path) { onReveal(); return; }
+        if (!path || globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { onReveal(); return; }
         overlay = document.createElement('div');
         overlay.className = 'warp-path-intro';
         overlay.setAttribute('role', 'status');

@@ -53,7 +53,7 @@ function browser() {
             addEventListener(type, callback) {callbacks.set(type, callback);}},
         URL: {createObjectURL() {return 'blob:save';}, revokeObjectURL(url) {revoked.push(url);}},
         setTimeout(callback) {callback();},
-        localStorage: {getItem: key => stored.get(key) ?? null, setItem(key, value) {if (denied) throw new Error('quota exceeded'); stored.set(key, String(value));}},
+        localStorage: {removeItem: key => stored.delete(key), getItem: key => stored.get(key) ?? null, setItem(key, value) {if (denied) throw new Error('quota exceeded'); stored.set(key, String(value));}},
         addEventListener() {}, dispatchEvent(event) {notifications.push(event.type);}, location: {reload() {}},
         fetch() {throw new Error('Save transfer must not call a backend');}
     });
@@ -118,7 +118,7 @@ let readLarge = false;
 b.get('save-file').files = [{size: format.MAX_BYTES + 1, text: async () => {readLarge = true; return serialized;}}];
 await b.action('save-file', 'change');
 assert.equal(readLarge, false);
-assert.match(b.get('save-error').textContent, /20MB/);
+assert.match(b.get('save-error').textContent, /512KB/);
 b.get('save-file').files = [{size: 10, text: async () => '{broken'}];
 await b.action('save-file', 'change');
 assert.equal(b.get('save-preview').hidden, true);
@@ -129,3 +129,20 @@ const reading = b.action('save-file', 'change');
 b.action('save-close'); finishRead(serialized); await reading;
 assert.equal(b.get('save-preview').hidden, true);
 console.log('PASS: download, preview, explicit replacement, draw guard, changed-save guard, live update events, undo, oversized and corrupt files, and cancellation.');
+
+// Limits are checked before mutation, including multi-byte input.
+assert.throws(() => format.parse('한'.repeat(Math.floor(format.MAX_BYTES / 3) + 1)), /512KB/);
+const stable = JSON.stringify(storage.snapshot());
+assert.throws(() => storage.setItem('warp', 'x'.repeat(512 * 1024 + 1)), /한도/);
+assert.equal(JSON.stringify(storage.snapshot()), stable);
+assert.throws(() => storage.importSections({warp: 'x'.repeat(512 * 1024 + 1), relic: null, teams: null}), /한도/);
+assert.equal(JSON.stringify(storage.snapshot()), stable);
+storage.importSections(empty);
+storage.clearPrevious();
+assert.equal(storage.getPrevious(), null);
+assert.equal(storage.getItem('teams'), '[]');
+storage.deleteProfile();
+assert.equal(storage.id, null);
+assert.equal(b.stored.get(b.key('other', 'warp')), 'untouched');
+for (const section of ['warp', 'relic', 'teams', 'save-bundle', 'ready']) assert.equal(b.stored.has(b.key('destination', section)), false);
+console.log('PASS: byte and profile limits preserve saves, recovery cleanup and deletion remain scoped to the active profile.');

@@ -18,7 +18,7 @@
 .profile-import-panel p { line-height: 1.7; margin: 12px 0; }
 .profile-import-panel button { padding: 10px 16px; margin: 10px 0; border-radius: 8px; background: #c2d3ff; color: #10203e; }
 #profile-account-status { min-height: 20px; font-size: 13px; color: #c9d7f4; margin-bottom: 12px; }
-#save-dialog { width: min(700px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); padding: 0; margin: auto; border: 1px solid #657296; border-radius: 20px; background: #101b2f; color: #edf2ff; overflow-y: auto; user-select: text; }
+#save-dialog { width: min(700px, calc(calc(100 * var(--ui-vw)) - 32px)); max-height: calc(calc(100 * var(--ui-dvh)) - 40px); padding: 0; margin: auto; border: 1px solid #657296; border-radius: 20px; background: #101b2f; color: #edf2ff; overflow-y: auto; user-select: text; }
 #save-dialog::backdrop { background: #050814ce; backdrop-filter: blur(8px); }
 .save-shell { padding: 24px; }.save-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }.save-header small { font-size: 10px; color: #9bb4e8; letter-spacing: .15em; }.save-header h2 { margin-top: 8px; font-size: 23px; font-weight: 800; }
 #save-dialog button { font: inherit; font-size: 13px; cursor: pointer; padding: 11px 16px; border-radius: 8px; }.save-header button, .save-secondary { border: 1px solid #637392; color: #d9e4ff; background: #192944; }.save-primary { border: 0; background: #c2d3ff; color: #10203e; font-weight: 700 !important; margin-top: 14px; width: 100%; }

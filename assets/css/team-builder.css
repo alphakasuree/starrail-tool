@@ -4,7 +4,7 @@
 .team-header { display: flex; justify-content: space-between; align-items: center; color: #b7a8d6; font-size: 11px; }
 .team-header button { border: 0; background: transparent; color: #d1c2ec; padding: 8px 0; font: inherit; font-size: 13px; cursor: pointer; }
 .team-intro { margin: 28px 0; }
-.team-intro h1 { font-size: clamp(30px, 4vw, 46px); font-weight: 900; letter-spacing: -.05em; }
+.team-intro h1 { font-size: clamp(30px, calc(4 * var(--ui-vw)), 46px); font-weight: 900; letter-spacing: -.05em; }
 .team-intro h1 span { color: #d9baff; }
 .team-intro p, .team-muted { color: #a3acc6; font-size: 12px; line-height: 1.8; margin: 10px 0; }
 .team-layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); align-items: start; gap: 22px; }

@@ -1,0 +1,43 @@
+:root {
+    --ui-scale: 1;
+    --ui-vw: 1vw;
+    --ui-vh: 1vh;
+    --ui-dvh: 1vh;
+}
+@supports (height: 1dvh) {
+    :root { --ui-dvh: 1dvh; }
+}
+html { background: #050814; overflow: hidden; }
+html[data-scaled-viewport] body {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(100vw / var(--ui-scale));
+    height: calc(100vh / var(--ui-scale));
+    height: calc(100dvh / var(--ui-scale));
+    transform: scale(var(--ui-scale));
+    transform-origin: top left;
+}
+/* Native modal dialogs occupy the top layer and need their own scaling. */
+html[data-scaled-viewport] dialog:modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    margin: 0;
+    transform: translate(-50%, -50%) scale(var(--ui-scale));
+    transform-origin: center;
+}
+
+/* The lobby uses a 2560px canvas; the planner needs native-size text. */
+html[data-scaled-viewport] #prep-screen {
+    inset: auto;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    transform: scale(calc(1 / var(--ui-scale)));
+    transform-origin: top left;
+}

@@ -1,0 +1,15 @@
+{
+  "id": "./",
+  "name": "스타레일 계정 & 픽업 플래너",
+  "short_name": "스타레일 툴",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1627",
+  "theme_color": "#0b1627",
+  "icons": [
+    {"src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

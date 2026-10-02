@@ -394,4 +394,13 @@
         previousFocus?.focus();
     };
     document.addEventListener('keydown', event => {if (event.key === 'Escape' && !get('relic-screen').hidden) globalThis.closeRelicCalculator();});
+    globalThis.RelicPlannerUI = Object.freeze({
+        capture: () => ({characterId:get('relic-character-select').value,mode,targets:readBuildTargets(),rows:Array.from({length:4},(_,i)=>({id:get(`relic-stat-${i}`).value,value:get(`relic-value-${i}`).value})),weights:Object.fromEntries(stats.map(s=>[s.id,get(`relic-weight-${s.id}`).value]))}),
+        goals: () => ({characterId:get('relic-character-select').value,targets:readBuildTargets().map(({id,value,endValue,mode})=>({id,value,endValue,mode}))}),
+        applyGoals(plan) {
+            if(!plan || !calculatorCharacters.some(c=>c.id===plan.characterId) || !Array.isArray(plan.targets) || plan.targets.length>stats.length || new Set(plan.targets.map(t=>t.id)).size!==plan.targets.length || !plan.targets.every(t=>stats.some(s=>s.id===t.id) && ['min','max','lt'].includes(t.mode) && [t.value,t.endValue].every(v=>Number.isFinite(Number(v)) && Number(v)>0 && Number(v)<=1000000))) throw new Error('공유 유물 목표가 올바르지 않습니다.');
+            get('relic-character-search').value='';get('relic-character-search').dispatchEvent(new Event('input'));get('relic-character-select').value=plan.characterId;changeCharacter();
+            buildTargets=plan.targets.map(t=>({...t,current:''}));buildGoalsEdited=true;renderBuildTargets();changeMode('build');clearResult();
+        }
+    });
 })();

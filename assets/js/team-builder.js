@@ -119,7 +119,7 @@
     const models=createModels(characterCatalog,relicBuildReference,teamSynergyData);
     const mains=models.filter(c=>c.roles.includes('main'));
     let currentTeams=[],savedTeams=[],previousFocus=null;
-    const owned=()=>new Set(models.filter(c=>userInventory[getInventoryKey(c)]===1).map(c=>c.id));
+    const owned=()=>globalThis.HonkaiAccount?.owned() || new Set();
     function fillMains() {
         const normalize=v=>v.toLocaleLowerCase().replace(/[\s.•·()]/g,'');
         const query=normalize(get('team-search').value);
@@ -133,14 +133,23 @@
     }
     function memberCard(c,index) {
         const role=index===0 ? '메인 딜러' : c.roles.includes('sustain') ? '힐러 / 탱커' : c.roles.includes('main') ? '연계 / 서브 딜러' : '서포터';
-        return `<div class="team-member"><img src="${escape(c.image)}" alt="${escape(c.name)}" loading="lazy"><small>${role}</small><strong>${escape(c.name)}</strong><span>${escape(c.pathName)} · ${escape(c.elementName)}</span><b class="${owned().has(c.id) ? 'owned' : ''}">${owned().has(c.id) ? '보유' : '미획득'}</b></div>`;
+        const investment=globalThis.HonkaiAccount?.get(c.id);
+        return `<div class="team-member"><img src="${escape(c.image)}" alt="${escape(c.name)}" loading="lazy"><small>${role}</small><strong>${escape(c.name)}</strong><span>${escape(c.pathName)} · ${escape(c.elementName)}</span><b class="${owned().has(c.id) ? 'owned' : ''}">${owned().has(c.id) ? `E${investment.e} · ${investment.s ? `전용 S${investment.s}` : '전용 미보유'}` : '미보유'}</b></div>`;
     }
     function render() {
         const main=models.find(c=>c.id===get('team-main').value);
+        const accountMain=globalThis.HonkaiAccount?.get(main?.id);
+        if(accountMain?.owned) {get('team-acheron-e2').checked=accountMain.e>=2;get('team-acheron-e2').disabled=true;}
+        else get('team-acheron-e2').disabled=false;
         get('team-e2-setting').hidden=main?.id!=='1308';
         get('team-main-info').innerHTML=main ? `<img src="${escape(main.image)}" alt="${escape(main.name)}"><div><h2>${escape(main.name)}</h2><p>${[...main.tags].filter(t=>labels[t]).map(t=>`<span>${labels[t]}</span>`).join('')}</p><small>${teamMetaPresets.recipes.some(r=>r.main===main.id) ? '공략 기반 핵심 편성 우선 · 조건 함께 확인' : '고점 자료 미등록 · 호환성 추정만 제공'}</small></div>` : '';
         const result=recommend(models,main?.id,{owned:owned(),ownedOnly:get('team-owned-only').checked,fourStarOnly:get('team-four-star').checked,acheronE2:get('team-acheron-e2').checked,offensive:get('team-offensive').checked});
         currentTeams=result.teams;
+        for(const team of currentTeams) {
+            if(team.members.some(c=>c.id==='1308')) for(const id of ['1409','1406']) {
+                if(team.members.some(c=>c.id===id) && !globalThis.HonkaiAccount?.get(id).s) team.warnings.push(`${models.find(c=>c.id===id).name}: 전용 광추 미보유 · 광추에 의존하는 디버프 지원은 적용할 수 없습니다.`);
+            }
+        }
         get('team-results').innerHTML=currentTeams.length ? currentTeams.map((team,i)=>`<article class="team-recommendation"><header><div><small>RECOMMENDATION 0${i+1}</small><h3>${team.recipe ? escape(team.recipe.title) : '호환성 추정 대안'}</h3></div><span>${team.recipe ? `공략 기반<b>${team.recipe.noSustain ? '무생존 고점 후보' : '핵심 편성 후보'}</b>` : `추정 점수<b>${team.score}</b>`}</span></header><div class="team-members">${team.members.map(memberCard).join('')}</div><p class="team-evidence">${team.recipe ? '공략의 개별 시너지 설명을 바탕으로 재구성한 후보입니다. 같은 성혼·광추·적 조건에서 측정한 DPS 순위는 아닙니다.' : '보유·필터 조건에 맞춰 계산한 추정 대안입니다. 검증된 고점 편성으로 취급하지 않습니다.'}</p><div class="team-reasons">${team.details.map(d=>`<p><strong>${escape(d.member.name)}</strong> ${escape(d.reason)}<small>${d.matches.slice(0,3).map(m=>labels[m.tag]).join(' · ')}${d.guidePartner && team.recipe ? ' · 공략 시너지 동료' : ''}</small></p>`).join('')}</div>${team.warnings.length ? `<div class="team-notes">${team.warnings.map(w=>`<p>ⓘ ${escape(w)}</p>`).join('')}</div>` : ''}<footer>${team.recipe ? `<div class="team-source-links">${team.recipe.sourceKeys.map(key=>{const source=teamMetaPresets.sources[key];return `<a href="${escape(source.url)}" target="_blank" rel="noopener noreferrer">${escape(source.title)} ↗</a><small>확인 ${source.checkedAt}${source.updatedAt ? ` · 원문 갱신 ${source.updatedAt}` : ''}</small>`;}).join('')}</div>` : '<a href="docs/references/relic-setting-reference.pdf" target="_blank" rel="noopener noreferrer">세팅 표 / 추정 기준 ↗</a>'}<button type="button" id="team-save-${i}">이 파티 저장 +</button></footer></article>`).join('') : `<p class="team-empty" role="status">${escape(result.message)}</p>`;
         currentTeams.forEach((team,i)=>get(`team-save-${i}`).addEventListener('click',()=>saveTeam(team)));
     }
@@ -173,6 +182,7 @@
     get('team-search').addEventListener('input',()=>{get('team-saved-preview').innerHTML='';fillMains();});
     ['team-main','team-owned-only','team-four-star','team-acheron-e2','team-offensive'].forEach(id=>get(id).addEventListener('change',()=>{get('team-saved-preview').innerHTML='';render();}));
     fillMains();get('team-main').value='1310';render();renderSaved();
+    globalThis.addEventListener('honkai-account-changed',render);
     globalThis.openTeamBuilder=()=>{
         if(isWarping || !HonkaiProfileStorage.id) return;
         previousFocus=document.activeElement;

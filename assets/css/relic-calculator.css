@@ -6,7 +6,7 @@
 .relic-back { padding: 8px 0; font-size: 13px; }
 .relic-eyebrow { font-size: 10px; letter-spacing: .16em; color: #82b7b0; }
 .relic-intro { margin: 32px 0 28px; }
-.relic-intro h1 { font-size: clamp(30px, 4vw, 48px); font-weight: 900; letter-spacing: -.055em; margin: 8px 0 12px; }
+.relic-intro h1 { font-size: clamp(30px, calc(4 * var(--ui-vw)), 48px); font-weight: 900; letter-spacing: -.055em; margin: 8px 0 12px; }
 .relic-intro h1 span { color: #a8f4d0; }
 .relic-intro > p:last-child { color: #a4b2c6; font-size: 13px; }
 .relic-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; align-items: start; }
@@ -82,3 +82,43 @@
 .relic-impact .relic-score-ring { animation: relic-impact .55s ease-out; }
 @keyframes relic-impact { 0% { transform: scale(.92); } 45% { transform: scale(1.035); box-shadow: 0 0 45px #a8f4d028; } 100% { transform: scale(1); } }
 @media (max-width: 760px) { .relic-shell { padding: 18px 16px 32px; } .relic-layout { grid-template-columns: 1fr; } .relic-result { position: static; } .relic-panel { padding: 20px; } .relic-intro { margin-top: 24px; } .relic-weight-grid { grid-template-columns: repeat(2, 1fr); } }
+.relic-workspace-nav {display:flex;gap:4px;padding:5px;margin:0 0 24px;width:fit-content;max-width:100%;border:1px solid #2c3e50;border-radius:14px;background:#0b1421;}
+.relic-workspace-nav button {padding:11px 24px;border:0;border-radius:9px;background:transparent;color:#90a5bc;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;}
+.relic-workspace-nav button[aria-pressed="true"] {background:#243e3c;color:#c4f4e1;box-shadow:0 2px 8px #0002;}
+.relic-workspace-nav button:hover {color:#e0f3eb;}
+.relic-workspace-nav button:focus-visible {outline:2px solid #99e9cf;outline-offset:2px;}
+#relic-workspace-analysis[hidden],#relic-workspace-compare[hidden],#relic-workspace-speed[hidden] {display:none;}
+.relic-input-help {margin:0 0 20px;font-size:12px;color:#8eabb7;}
+.relic-input-help summary,.relic-save-panel summary {cursor:pointer;}
+.relic-save-panel summary {font-size:12px;color:#bed8cf;}
+.relic-save-content {margin-top:18px;}
+#relic-screen .relic-workspace-card {margin:0;padding:32px;border-color:#314156;background:linear-gradient(145deg,#142132e0,#0d1524);border-radius:20px;}
+#relic-workspace-compare,#relic-workspace-speed {max-width:900px;margin:0 auto;}
+#relic-screen .relic-tool-heading {margin-bottom:28px;}
+#relic-screen .relic-tool-heading h2 {font-size:24px;letter-spacing:-.035em;margin:9px 0;}
+#relic-screen .relic-tool-heading p {font-size:13px;color:#9bafc3;}
+#relic-screen .tool-fields {gap:20px;}
+#relic-screen .tool-card label {font-size:12px;color:#aec0d0;}
+#relic-screen .tool-card input,#relic-screen .tool-card select {margin-top:8px;padding:12px;border-color:#3b4c63;border-radius:9px;background:#080f1c;font-size:13px;}
+#relic-screen .relic-compare-slot {padding:22px;border:1px solid #314156;border-radius:14px;background:#0c1726;}
+#relic-screen .relic-compare-slot>label {font-size:17px;color:#d8e8e3;font-weight:700;}
+#relic-screen .relic-compare-slot button {margin-top:12px;width:100%;font-size:12px;background:transparent;border-color:#39584f;color:#a8dbc9;}
+#relic-screen .relic-tool-caption {font-size:11px;color:#8ba1b7;line-height:1.8;margin:16px 0;}
+#relic-screen .relic-tool-primary {margin:4px 0 22px;padding:13px 22px;border:0;background:#adf0d6;color:#0c2424;font-weight:800;font-size:13px;}
+#compare-result:empty {min-height:150px;display:grid;place-items:center;border:1px dashed #314156;border-radius:12px;}
+#compare-result:empty::before {content:'A와 B를 선택하면 능력치 변화가 여기에 표시됩니다.';font-size:12px;color:#7e95ac;padding:24px;text-align:center;}
+#compare-result .tool-table {font-size:13px;}
+#compare-result .tool-table th,#compare-result .tool-table td {padding:15px 12px;}
+#compare-result .tool-table tbody tr:last-child {background:#1c3432;color:#d6f3e8;font-weight:700;}
+.relic-advanced {margin:24px 0;padding:18px 0;border-top:1px solid #314156;border-bottom:1px solid #314156;}
+.relic-advanced summary {font-size:13px;color:#c0dbd0;cursor:pointer;}
+#relic-screen .relic-advanced>p {font-size:12px;margin-top:12px;}
+#relic-screen #speed-result {gap:14px;margin-top:26px;}
+#relic-screen #speed-result .tool-metric {padding:22px 18px;background:#0d1b2a;border-color:#314156;}
+#relic-screen #speed-result .tool-metric:last-child {border-color:#45695d;background:#142b28;}
+#relic-screen #speed-result strong {font-size:25px;letter-spacing:-.025em;margin:12px 0;}
+#relic-screen .relic-share-card {margin:18px 0 0;padding:16px 0;border:0;border-top:1px solid #2d3c4f;border-radius:0;background:transparent;}
+.relic-share-card summary {font-size:12px;color:#a8c5bb;cursor:pointer;}
+#relic-screen .relic-share-card p {font-size:11px;margin:12px 0;}
+#relic-screen .relic-share-card button {font-size:12px;}
+@media(max-width:760px) {.relic-workspace-nav{width:100%;}.relic-workspace-nav button{flex:1;padding:11px 8px;font-size:12px;}#relic-screen .relic-workspace-card{padding:22px 18px;}#relic-screen .relic-tool-heading h2{font-size:21px;}#relic-screen .relic-compare-slot{padding:16px;}#relic-screen .tool-fields{gap:14px;}#compare-result .tool-table th,#compare-result .tool-table td{padding:12px 8px;}}
