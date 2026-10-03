@@ -106,7 +106,7 @@ const swEvents=new Map(),cached=[],puts=[],deleted=[];let claims=0,network=0;
 const cache={async addAll(requests){cached.push(...requests.map(r=>r.url));},async match(){return {cached:true};},async put(...args){puts.push(args);}};
 const scope='https://example.com/project/';
 const swContext=vm.createContext({URL,Request:class{constructor(url){this.url=String(url);}},
-    self:{registration:{scope},clients:{async claim(){claims++;}},addEventListener(type,fn){swEvents.set(type,fn);}},
+    self:{location:new URL(scope),registration:{scope},clients:{async claim(){claims++;}},addEventListener(type,fn){swEvents.set(type,fn);}},
     caches:{async open(){return cache;},async keys(){return ['honkai-tools-_project_-old','honkai-tools-_other_-old'];},async delete(name){deleted.push(name);}},
     async fetch(){network++;return {ok:true,clone(){return this;}};}
 });
