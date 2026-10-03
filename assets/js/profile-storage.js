@@ -1,9 +1,15 @@
 (() => {
     'use strict';
     const prefix = 'honkai-id-v1:';
+    const lastProfileKey = 'honkai-last-profile-v1';
     const sections = new Set(['warp', 'relic', 'teams', 'account']);
     let activeId = null;
     let linkedUid = false;
+    const validId = id => typeof id === 'string' && /^[\p{L}\p{N}_.-]{1,30}$/u.test(id) && id === id.trim().normalize('NFC').toLowerCase();
+    function rememberProfile() {
+        // Remembering the entry is optional; it must never undo a committed save.
+        try { localStorage.setItem(lastProfileKey, JSON.stringify({version: 1, id: activeId, linkedUid})); } catch {}
+    }
     function storageKey(section) {
         if (!activeId) throw new Error('아이디를 입력하고 접속하세요.');
         if (!sections.has(section)) throw new Error('저장 영역이 잘못되었습니다.');
@@ -99,6 +105,7 @@
             const keys = [...sections].map(storageKey).concat(bundleKey(), `${prefix}${encodeURIComponent(activeId)}:ready`);
             activeId = id;
             for (const key of keys) localStorage.removeItem(key);
+            rememberProfile();
             globalThis.dispatchEvent(new Event('honkai-profile-renamed'));
         },
         deleteProfile() {
@@ -106,10 +113,58 @@
             keys.push(bundleKey(), `${prefix}${encodeURIComponent(activeId)}:ready`);
             for (const key of keys) localStorage.removeItem(key);
             activeId = null;
+            linkedUid = false;
+            rememberProfile();
         }
     });
     document.addEventListener('DOMContentLoaded', () => {
         const get = id => document.getElementById(id);
+        function enterLobby(profile) {
+            globalThis.dispatchEvent(new Event('honkai-profile-login'));
+            get('profile-current-id').textContent = profile ? `${profile.nickname} · UID ${activeId} · 개척 Lv.${profile.level}` : `프로필 ${activeId} · 이 브라우저에 저장`;
+            get('app-content').inert = false;
+            get('profile-login-screen').hidden = true;
+            get('profile-change').focus();
+        }
+        function restoreProfile() {
+            try {
+                const raw = localStorage.getItem(lastProfileKey);
+                let remembered = raw === null ? null : JSON.parse(raw);
+                if (raw === null) {
+                    // Older versions did not remember the last entry. Restore only
+                    // when there is exactly one saved profile, never guess between IDs.
+                    const ids = new Set();
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const match = localStorage.key(i)?.match(/^honkai-id-v1:([^:]+):(ready|save-bundle|warp|relic|teams|account)$/);
+                        if (match) {
+                            const id = decodeURIComponent(match[1]);
+                            if (validId(id)) ids.add(id);
+                        }
+                    }
+                    if (ids.size !== 1) return false;
+                    remembered = {version: 1, id: [...ids][0], linkedUid: false};
+                }
+                if (remembered?.id === null || remembered === null) return false;
+                if (remembered.version !== 1 || !validId(remembered.id) || typeof remembered.linkedUid !== 'boolean') throw new Error('Invalid remembered profile');
+                const base = `${prefix}${encodeURIComponent(remembered.id)}:`;
+                if (!['ready', 'save-bundle', ...sections].some(s => localStorage.getItem(base + s) !== null)) return false;
+                activeId = remembered.id;
+                const values = snapshot();
+                const cached = JSON.parse(values.account || 'null')?.uidProfile;
+                const profile = cached ? globalThis.HonkaiUid.validateSnapshot(cached) : null;
+                if (profile && profile.uid !== activeId || remembered.linkedUid && !profile) throw new Error('Invalid cached UID profile');
+                linkedUid = raw === null ? Boolean(profile) : remembered.linkedUid;
+                // Use the cached public profile, with no network request on reload.
+                enterLobby(profile);
+                rememberProfile();
+                return true;
+            } catch {
+                activeId = null;
+                linkedUid = false;
+                get('profile-login-error').textContent = '저장된 프로필을 자동으로 열지 못했습니다. UID나 로컬 프로필로 다시 접속해 주세요.';
+                return false;
+            }
+        }
         get('profile-login-mode').addEventListener('change', () => {
             const local = get('profile-login-mode').value === 'local', input = get('profile-login-id');
             input.value = ''; input.minLength = local ? 1 : 9; input.maxLength = local ? 30 : 10;
@@ -146,11 +201,8 @@
                 activeId = id;
                 linkedUid = !local;
                 if (profile) HonkaiAccount.importUid(profile);
-                globalThis.dispatchEvent(new Event('honkai-profile-login'));
-                get('profile-current-id').textContent = profile ? `${profile.nickname} · UID ${id} · 개척 Lv.${profile.level}` : `프로필 ${id} · 이 브라우저에 저장`;
-                get('app-content').inert = false;
-                get('profile-login-screen').hidden = true;
-                get('profile-change').focus();
+                enterLobby(profile);
+                rememberProfile();
             } catch (failure) {
                 activeId = null;
                 linkedUid = false;
@@ -164,8 +216,14 @@
                 get('profile-account-status').textContent = '추첨이 끝난 뒤 아이디를 변경하세요.';
                 return;
             }
-            location.reload();
+            try {
+                // An explicit change returns to entry even if one profile is saved.
+                localStorage.setItem(lastProfileKey, 'null');
+                location.reload();
+            } catch {
+                get('profile-account-status').textContent = '프로필 변경을 위해 사이트 데이터 저장을 허용해 주세요.';
+            }
         });
-        get('profile-login-id').focus();
+        if (!restoreProfile()) get('profile-login-id').focus();
     });
 })();

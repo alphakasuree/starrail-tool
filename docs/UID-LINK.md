@@ -10,13 +10,17 @@ UID별 기존 세이브는 유지하며 공개 프로필은 account 영역에 �
 
 Windows에서는 프로젝트 폴더의 **스타레일 실행.cmd**를 더블 클릭하세요. UID 중계 서버를 숨김 실행하고 `http://localhost:5510`을 브라우저로 엽니다. 이미 실행된 서버는 재사용합니다. 로그는 `tmp/web/`에 저장됩니다. HTML을 `file://`로 직접 열어서는 UID 조회를 사용할 수 없습니다. 파일 화면과 웹 서버 화면의 브라우저 저장 공간은 다르므로 기존 파일 화면의 로컬 세이브는 백업 파일로 옮겨 주세요.
 
+구버전 UID 서버는 실행 시 이 프로젝트의 서버임을 확인한 뒤 자동 재시작합니다. 서버 코드를 추가 수정했다면 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-web.ps1 -Restart`로 다시 시작하세요. 서버 변경 후 저장된 프로필을 갱신하려면 화면에서 **UID 정보 다시 조회**를 누르세요.
+
 ```powershell
 node scripts/serve-local.mjs
 # 이 PC의 Node 실행 파일을 사용할 경우
 ./tmp/runtime/node.exe scripts/serve-local.mjs
 ```
 
-`http://localhost:5500`에서 실행하세요. 서버가 이미 실행 중이면 새 코드로 다시 시작해야 합니다. `/api/hsr/{uid}`가 [MiHoMo 공개 프로필 API](https://march7th.xyz/en/api/parsed.html)에 요청합니다. 브라우저에서 직접 API를 호출하면 CORS에 막히므로 중계 서버가 필요합니다. UID만 전송하며 비밀번호·HoYoLAB 쿠키는 사용하지 않습니다.
+`http://localhost:5500`에서 실행하세요. 서버가 이미 실행 중이면 새 코드로 다시 시작해야 합니다. `/api/hsr/{uid}`가 [MiHoMo 공개 프로필 API](https://march7th.xyz/en/api/parsed.html)와 Enka.Network 공개 프로필 API를 함께 조회합니다. MiHoMo 가공 응답에서 빠진 캐릭터(예: 펄)는 Enka 응답으로 보완하며, MiHoMo 조회 자체가 실패하면 Enka로 조회합니다. Enka만 실패하면 정상 MiHoMo 응답을 유지합니다. 기존 캐릭터의 MiHoMo 능력치·장비는 유지하고 중복 ID는 추가하지 않습니다.
+
+Enka 원본의 능력치는 `scripts/hsr-enka-data.mjs`에 포함된 게임 데이터로 계산합니다. 새 캐릭터·광추의 기본 데이터가 없으면 확인되지 않은 총 능력치는 표시하지 않습니다. 게임 데이터는 `node scripts/sync-uid-assets.mjs`로 갱신할 수 있습니다. 로컬 서버와 Cloudflare Worker는 같은 변환 로직을 사용하므로 온라인 사이트에 적용하려면 Worker도 다시 배포해야 합니다. 브라우저에서 직접 API를 호출하면 CORS에 막히므로 중계 서버가 필요합니다. UID만 전송하며 비밀번호·HoYoLAB 쿠키는 사용하지 않습니다.
 
 ## GitHub Pages 자동 배포 — 최초 한 번 설정
 

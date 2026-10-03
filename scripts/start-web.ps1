@@ -1,4 +1,4 @@
-param([switch]$NoBrowser)
+param([switch]$NoBrowser, [switch]$Restart)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $siteUrl = 'http://localhost:5510'
@@ -7,12 +7,22 @@ $healthUrl = 'http://127.0.0.1:5510/api/hsr/health'
 function Test-UidServer {
     try {
         $health = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2
-        return $health.service -eq 'honkai-uid-relay'
+        return $health.service -eq 'honkai-uid-relay' -and $health.version -eq 2
     } catch { return $false }
 }
 
 try {
-    if (-not (Test-UidServer)) {
+    if ($Restart -or -not (Test-UidServer)) {
+        $serverScript = Join-Path $PSScriptRoot 'serve-local.mjs'
+        # Restart only a confirmed relay running this project's exact server script.
+        $existingHealth = $null
+        try { $existingHealth = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2 } catch {}
+        if ($existingHealth.service -eq 'honkai-uid-relay') {
+            $serverArgument = '"' + $serverScript + '"'
+            $oldServers = @(Get-CimInstance Win32_Process -Filter "name = 'node.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($serverArgument) })
+            if ($oldServers.Count -ne 1) { throw 'Could not safely identify this project server. Restart the server manually.' }
+            Stop-Process -Id $oldServers[0].ProcessId -Force
+        }
         $nodeExecutable = Join-Path $projectRoot 'tmp\runtime\node.exe'
         if (-not (Test-Path -LiteralPath $nodeExecutable)) {
             $nodeCommand = Get-Command node.exe -ErrorAction SilentlyContinue
@@ -22,7 +32,6 @@ try {
         $logDirectory = Join-Path $projectRoot 'tmp\web'
         New-Item -ItemType Directory -Path $logDirectory -Force | Out-Null
         $env:PORT = '5510'
-        $serverScript = Join-Path $PSScriptRoot 'serve-local.mjs'
         $serverProcess = Start-Process -FilePath $nodeExecutable -ArgumentList ('"' + $serverScript + '"') -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $logDirectory 'server.log') -RedirectStandardError (Join-Path $logDirectory 'server-error.log')
         $ready = $false
         for ($attempt = 0; $attempt -lt 20; $attempt++) {

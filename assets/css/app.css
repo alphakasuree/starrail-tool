@@ -157,7 +157,6 @@
             position: relative; aspect-ratio: 3/4; background: #111; border-radius: 6px; overflow: hidden;
             border: 1px solid #333; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: all 0.2s;
         }
-        .col-item.locked { filter: saturate(0.6) brightness(0.8); }
         .col-item.unlocked:hover { transform: scale(1.05); z-index: 2; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .col-item.unlocked.rarity-5 { border-color: var(--c-5star); }
         .col-item.unlocked.rarity-4 { border-color: var(--c-4star); }
@@ -172,7 +171,7 @@
         button.col-item { width: 100%; padding: 0; font: inherit; color: inherit; cursor: pointer; }
         button.col-item:hover { filter: none; transform: translateY(-3px); border-color: #e6d1ff; }
         button.col-item:focus-visible { outline: 3px solid #70a8d4; outline-offset: 3px; }
-        .col-grid:has(.collection-account) { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+        .col-grid-character { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
         .collection-entry { min-width: 0; }
         .collection-account { padding: 10px; border: 1px solid #344760; border-radius: 0 0 8px 8px; background: #162339; color: #e7edf7; font-size: 12px; }
         .collection-account > label { display: block; margin-bottom: 8px; }

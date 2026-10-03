@@ -736,20 +736,15 @@ const db = [
             if (items.length === 0) return ''; 
 
             let titleColor = rarity === 5 ? 'text-yellow-400 border-yellow-800' : (rarity === 4 ? 'text-purple-400 border-purple-800' : 'text-blue-400 border-blue-800');
-            let html = `<div class="rarity-header ${titleColor}">${rarity}성 ${type === 'character' ? '캐릭터' : '광추'}</div><div class="col-grid">`;
+            let html = `<div class="rarity-header ${titleColor}">${rarity}성 ${type === 'character' ? '캐릭터' : '광추'}</div><div class="col-grid${type === 'character' ? ' col-grid-character' : ''}">`;
 
             items.forEach(item => {
-                const account = globalThis.HonkaiAccount?.get(item.id) || {owned:false,e:0,s:0};
-                const editable = globalThis.HonkaiAccount?.editable();
-                const isUnlocked = type === 'lightcone' || account.owned;
-                const stateClass = isUnlocked ? `unlocked rarity-${rarity}` : 'locked';
-                const badgeHTML = type === 'character' ? `<div class="col-badge text-gray-300">${account.owned ? '보유' : '미보유'}</div>` : '';
+                const stateClass = `unlocked rarity-${rarity}`;
                 const bgStyle = item.image ? `background-image: url('${item.image}'); background-size: cover; background-position: center;` : `background: linear-gradient(135deg, #1e293b, #0f172a);`;
-                let nameColor = isUnlocked ? (rarity === 5 ? 'text-yellow-400' : (rarity === 4 ? 'text-purple-300' : 'text-blue-200')) : 'text-gray-200';
+                let nameColor = rarity === 5 ? 'text-yellow-400' : (rarity === 4 ? 'text-purple-300' : 'text-blue-200');
 
                 const detailHTML = item.type === 'character' ? `<span class="col-item-detail">${item.pathName} · ${item.elementName}</span>` : '';
-                const controls = type === 'character' ? `<div class="collection-account"><label><input type="checkbox" data-id="${item.id}" data-field="owned" aria-label="${escapeHTML(item.name)} 보유" ${account.owned ? 'checked' : ''} ${editable ? '' : 'disabled'}> 보유</label><div class="account-investment"><label>성혼<select data-id="${item.id}" data-field="e" aria-label="${escapeHTML(item.name)} 성혼" ${editable && account.owned ? '' : 'disabled'}>${Array.from({length:7},(_,e)=>`<option value="${e}" ${e===account.e ? 'selected' : ''}>E${e}</option>`).join('')}</select></label><label>전용 광추<select data-id="${item.id}" data-field="s" aria-label="${escapeHTML(item.name)} 전용 광추" ${editable ? '' : 'disabled'}>${Array.from({length:6},(_,s)=>`<option value="${s}" ${s===account.s ? 'selected' : ''}>${s ? `S${s}` : '미보유'}</option>`).join('')}</select></label></div></div>` : '';
-                html += `<article class="collection-entry"><button type="button" class="col-item ${stateClass}" style="${bgStyle}" data-action="collection-item" data-type="${escapeHTML(item.type)}" data-id="${escapeHTML(item.id)}" aria-label="${escapeHTML(item.name)} 일러스트 확대">${badgeHTML}<div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 60%); z-index: 3;"></div><div class="col-item-name ${nameColor}">${escapeHTML(item.name)}${detailHTML}</div></button>${controls}</article>`;
+                html += `<article class="collection-entry"><button type="button" class="col-item ${stateClass}" style="${bgStyle}" data-action="collection-item" data-type="${escapeHTML(item.type)}" data-id="${escapeHTML(item.id)}" aria-label="${escapeHTML(item.name)} 일러스트 확대"><div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 60%); z-index: 3;"></div><div class="col-item-name ${nameColor}">${escapeHTML(item.name)}${detailHTML}</div></button></article>`;
             });
             return html + `</div>`;
         }
@@ -757,10 +752,8 @@ const db = [
             const query = document.getElementById('collection-search').value.trim().toLocaleLowerCase();
             const rarity = document.getElementById('collection-rarity').value;
             const allItems = collectionItems.filter(item => item.type === currentTab);
-            document.getElementById('collection-owned-label').hidden = currentTab !== 'character';
-            const items = allItems.filter(item => `${item.name} ${item.pathName || ''} ${item.elementName || ''}`.toLocaleLowerCase().includes(query) && (rarity === 'all' || item.rarity === Number(rarity)) && (currentTab !== 'character' || !document.getElementById('collection-owned-filter').checked || globalThis.HonkaiAccount?.get(item.id).owned));
-            const ownedCount = globalThis.HonkaiAccount?.owned().size || 0;
-            document.getElementById('collection-count').textContent = `${currentTab === 'character' ? `${ownedCount}명 보유 · ` : ''}${items.length} / ${allItems.length}종`;
+            const items = allItems.filter(item => `${item.name} ${item.pathName || ''} ${item.elementName || ''}`.toLocaleLowerCase().includes(query) && (rarity === 'all' || item.rarity === Number(rarity)));
+            document.getElementById('collection-count').textContent = `${items.length} / ${allItems.length}종`;
             let finalHTML = generateGridHTML(5, currentTab, items) + generateGridHTML(4, currentTab, items) + generateGridHTML(3, currentTab, items);
             if (!items.length) finalHTML = '<p class="collection-empty">검색 결과가 없습니다.</p>';
             document.getElementById('collection-render-area').innerHTML = finalHTML;

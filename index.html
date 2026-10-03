@@ -17,6 +17,7 @@
     <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="assets/css/account-tools.css">
+    <link rel="stylesheet" href="assets/css/spec-card.css">
     <!-- Tailwind CSS 불러오기 -->
     <link rel="stylesheet" href="assets/css/tailwind.css">
     <link rel="stylesheet" href="assets/css/relic-calculator.css">
@@ -26,6 +27,7 @@
     <link rel="stylesheet" href="assets/css/warp-prep.css">
     <script src="assets/js/warp-prep-math.js"></script>
     <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/interactions.css">
     <link rel="stylesheet" href="assets/css/accessibility.css">
     <link rel="stylesheet" href="assets/css/viewport-scale.css?v=20261003-fill2">
     <script src="assets/js/viewport-scale.js?v=20261003-fill2"></script>
@@ -36,7 +38,7 @@
             <p class="font-orbitron">Honkai: Star Rail</p>
             <h1 id="profile-login-title">스타레일 UID 연동</h1>
             <p id="profile-file-help" hidden>HTML 파일을 직접 열었습니다. UID 조회는 웹 서버로 접속해야 합니다. <a href="http://localhost:5510" class="profile-server-link">UID 연동 화면 열기 →</a><br>화면이 열리지 않으면 프로젝트 폴더의 <strong>스타레일 실행.cmd</strong>를 더블 클릭하세요. 기존 파일 화면의 저장 데이터는 로컬 프로필에서 열어 백업할 수 있습니다.</p>
-            <p>실제 게임 UID로 닉네임, 개척 레벨, 전시 캐릭터의 성혼·광추·유물을 불러옵니다. 조회된 캐릭터는 보유 목록과 파티 추천에 반영됩니다.</p>
+            <p>실제 게임 UID로 닉네임, 개척 레벨, 전시 캐릭터의 성혼·광추·유물을 불러옵니다. 조회된 캐릭터는 보유 목록과 파티 추천에 반영됩니다. 한 번 접속하면 다음부터 저장된 프로필로 바로 로비에 들어갑니다.</p>
             <label for="profile-login-mode">접속 방식</label>
             <select id="profile-login-mode"><option value="uid">게임 UID로 연동</option><option value="local">기존 로컬 프로필 열기</option></select>
             <label id="profile-login-label" for="profile-login-id">붕괴: 스타레일 UID</label>
@@ -84,6 +86,9 @@
             </button>
             <!-- 우측 사이드 메뉴 -->
             <div class="lobby-menu flex-1 flex flex-col gap-4">
+                <button id="spec-card-open" type="button" class="spec-lobby-button">
+                    <span aria-hidden="true">✦</span><strong>내 캐릭터 스펙</strong><small>내 캐릭터 일러스트 · 스펙 명함 · PNG 저장</small>
+                </button>
                 <button id="prep-lobby-button" type="button" data-click-action="ui-2" class="prep-lobby-button">
                     <span aria-hidden="true">✦</span><strong>픽업 준비 계산기</strong><small>필요 성옥 · 목표 확률 · 가상 추첨</small>
                 </button>
@@ -208,10 +213,8 @@
                     <option value="4">★4</option>
                     <option value="3">★3</option>
                 </select>
-                <label id="collection-owned-label"><input id="collection-owned-filter" type="checkbox"> 보유 캐릭터만</label>
                 <span id="collection-count" class="collection-count" aria-live="polite"></span>
             </div>
-            <p class="collection-help">캐릭터 보유 여부·성혼·전용 광추를 직접 관리하세요. 픽업 결과는 도감에 반영되지 않습니다.</p>
             <p id="collection-status" class="collection-help" role="status"></p>
             <div class="collection-content">
                 <div id="collection-render-area"></div>
@@ -327,10 +330,24 @@
     </section>
     <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-title">
         <header><h1 id="account-title">내 계정</h1><button id="account-close" type="button" class="account-action">닫기</button></header>
-        <section id="uid-profile-panel" class="tool-card" hidden><h2>게임 공개 프로필</h2><p id="uid-player-summary"></p><p id="uid-signature"></p><button id="uid-refresh" type="button" class="account-action">UID 정보 다시 조회</button><p id="uid-sync-status" role="status" aria-live="polite"></p><p>전시 캐릭터의 보유·성혼을 자동 반영합니다. 전시하지 않은 캐릭터와 파티 추천용 전용 광추 S는 도감에서 입력하세요. 장착 광추와 유물은 아래에서 확인할 수 있습니다.</p><div id="uid-showcase"></div></section>
+        <section id="uid-profile-panel" class="tool-card" hidden><h2>게임 공개 프로필</h2><p id="uid-player-summary"></p><p id="uid-signature"></p><button id="uid-refresh" type="button" class="account-action">UID 정보 다시 조회</button><p id="uid-sync-status" role="status" aria-live="polite"></p><p>전시 캐릭터의 보유·성혼을 파티 추천에 자동 반영합니다. 장착 광추와 유물은 아래에서 확인할 수 있습니다.</p><div id="uid-showcase"></div></section>
         <section class="tool-card"><h2>프로필 관리</h2><div class="tool-fields"><label>프로필 이름<input id="account-name" maxlength="30"></label><div><button id="account-rename" type="button">이름 변경</button> <button id="account-backup" type="button">백업 · 복구 · 삭제</button></div></div><p id="account-size"></p><p id="account-backup-date"></p><p>프로필은 이 브라우저에 보관됩니다. 브라우저 데이터를 지우거나 비공개 창을 닫으면 사라질 수 있습니다.</p><p id="account-status" class="tool-status" role="status"></p></section>
     </dialog>
+    <dialog id="spec-card-dialog" class="account-dialog spec-dialog" aria-labelledby="spec-card-title">
+        <header class="spec-gallery-controls" hidden><div class="spec-heading"><h1 id="spec-card-title">내 캐릭터 · 스펙 명함</h1></div><div class="spec-header-actions"><button id="spec-card-refresh" type="button" class="account-action" aria-label="UID 정보 다시 조회" title="UID 정보 다시 조회">↻</button><button id="spec-card-close" type="button" class="account-action" aria-label="닫기" title="닫기">×</button></div></header>
+        <div class="spec-profile-bar" hidden><div class="spec-profile-copy"><strong id="spec-card-summary"></strong><small id="spec-card-updated"></small></div><span class="spec-gallery-hint">캐릭터를 선택해 나만의 명함을 만들어보세요</span></div>
+        <p id="spec-card-status" role="status" aria-live="polite"></p>
+        <div id="spec-card-list" class="spec-character-list" aria-label="명함을 만들 캐릭터"></div>
+        <nav id="spec-card-navigation" class="spec-card-navigation" aria-label="명함 화면" hidden><button id="spec-card-back" type="button" class="account-action">← 캐릭터 목록</button><button id="spec-card-dismiss" type="button" class="account-action" aria-label="명함 닫기">×</button></nav>
+        <section id="spec-card-preview" hidden aria-labelledby="spec-preview-title">
+            <div class="spec-toolbar"><h2 id="spec-preview-title">스펙 명함</h2><div class="spec-export"><label><input id="spec-card-show-uid" type="checkbox" checked> 명함에 UID 표시</label><button id="spec-card-download" type="button" class="account-action" disabled>PNG 저장</button></div></div>
+            <canvas id="spec-card-canvas" role="img" aria-label="선택한 캐릭터의 스펙 명함"></canvas>
+            <details class="spec-text-details"><summary>명함 스펙 텍스트로 보기</summary><div id="spec-card-text"></div></details>
+        </section>
+    </dialog>
     <script src="assets/js/account-tools.js"></script>
+    <script src="assets/js/spec-assets.js"></script>
+    <script src="assets/js/spec-card.js"></script>
     <script src="assets/js/team-synergy-data.js"></script>
     <script src="assets/js/team-meta-presets.js"></script>
     <script src="assets/js/team-builder.js"></script>

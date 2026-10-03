@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {queryHsr} from './hsr-proxy.mjs';
 import worker from './hsr-worker.mjs';
 const fixture = (uid='100000999') => ({player:{uid,nickname:'<개척자>',level:70,world_level:6,signature:'별의 여정',space_info:{achievement_count:500}},characters:[
-    {id:'1308',name:'아케론',rank:2,level:80,light_cone:{id:'23024',name:'장착 광추',rank:3,level:80},attributes:[{name:'공격력',field:'atk',value:1000,percent:false,display:'1000'},{name:'치명타 확률',field:'crit_rate',value:.05,percent:true,display:'5%'}],additions:[{field:'atk',value:200},{field:'crit_rate',value:.6}],relics:[{name:'머리',level:15,main_affix:{name:'HP',field:'hp',value:705,display:'705',percent:false},sub_affix:[]}]}
+    {id:'1308',name:'아케론',rank:2,level:80,light_cone:{id:'23024',name:'장착 광추',rank:3,level:80},attributes:[{name:'공격력',field:'atk',value:1000,percent:false,display:'1000'},{name:'치명타 확률',field:'crit_rate',value:.05,percent:true,display:'5%'}],additions:[{field:'atk',value:200},{field:'crit_rate',value:.6}],relics:[{id:'51011',rarity:5,name:'머리',level:15,main_affix:{name:'HP',field:'hp',value:705,display:'705',percent:false},sub_affix:[]}]}
 ]});
 const saved = new Map(), elements = new Map(), listeners = new Map(), events = [];
 const get = id => {
@@ -42,10 +42,15 @@ const backup = context.HonkaiSaveFormat.create('100000999',{warp:null,relic:null
 const roundTrip = context.HonkaiSaveFormat.toRaw(context.HonkaiSaveFormat.parse(JSON.stringify(backup)));
 assert.equal(JSON.parse(roundTrip.account).uidProfile.characters[0].lightCone.rank,3);
 assert.equal(JSON.parse(roundTrip.account).uidProfile.characters[0].relics.length,1);
+assert.equal(JSON.parse(roundTrip.account).uidProfile.characters[0].relics[0].id,'51011');
+assert.equal(JSON.parse(roundTrip.account).uidProfile.characters[0].relics[0].rarity,5);
 const accountBefore=saved.get(key('account'));status=429;
 await listeners.get('uid-refresh:click')();assert.equal(saved.get(key('account')),accountBefore);assert.match(get('uid-sync-status').textContent,/이전 조회/);assert.equal(get('uid-refresh').disabled,false);
 status=200;response=fixture();response.characters[0].rank=3;
+response.characters.push({...fixture().characters[0],id:'1503',name:'펄',rank:0});
 await listeners.get('uid-refresh:click')();assert.equal(context.HonkaiAccount.get('1308').e,3);
+assert.equal(context.HonkaiAccount.get('1503').owned,true);assert.equal(context.HonkaiAccount.get('1503').e,0);
+assert.match(get('uid-showcase').innerHTML,/펄/);
 const before=saved.get(key('account'));status=404;await login('100000999');assert.equal(context.HonkaiProfileStorage.id,null);assert.equal(saved.get(key('account')),before);assert.match(get('profile-login-error').textContent,/찾을 수/);
 status=200;networkError=true;await login('100000999');assert.equal(saved.get(key('account')),before);assert.match(get('profile-login-error').textContent,/연결할 수/);networkError=false;
 response=fixture('100000998');await login('100000999');assert.equal(saved.get(key('account')),before);assert.equal(context.HonkaiProfileStorage.id,null);
@@ -56,7 +61,7 @@ await login('old-profile','local');assert.equal(context.HonkaiProfileStorage.id,
 const realFetch=globalThis.fetch;
 try {
     let upstreamCalls=0;
-    globalThis.fetch=async(url,options)=>{upstreamCalls++;assert.equal(url,'https://api.mihomo.me/sr_info_parsed/100000999?lang=kr');assert.match(options.headers['User-Agent'],/Honkai/);return new Response(JSON.stringify(fixture()));};
+    globalThis.fetch=async(url,options)=>{upstreamCalls++;assert.match(options.headers['User-Agent'],/Honkai/);if(url==='https://enka.network/api/hsr/uid/100000999')return new Response('{}',{status:404});assert.equal(url,'https://api.mihomo.me/sr_info_parsed/100000999?lang=kr');return new Response(JSON.stringify(fixture()));};
     assert.equal((await queryHsr('../secret')).status,400);assert.equal(upstreamCalls,0);
     assert.equal((await queryHsr('100000999')).status,200);
     const request=new Request('https://relay.example/api/hsr/100000999',{headers:{Origin:'https://site.example'}});

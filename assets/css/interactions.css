@@ -1,0 +1,75 @@
+/* Shared feedback for static controls and dynamically generated cards. */
+:root {
+    --interaction-ease: cubic-bezier(.25, 1, .5, 1);
+}
+
+:is(button, a[href], summary, [role="button"], [role="tab"], input, select, textarea) {
+    transition-property: color, background-color, border-color, box-shadow, opacity, filter, transform, translate, scale !important;
+    transition-duration: .24s !important;
+    transition-timing-function: var(--interaction-ease) !important;
+}
+
+:is(button, a[href], summary, [role="button"], [role="tab"]) {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    :is(button, a[href], summary, [role="button"], [role="tab"]):where(:not(:disabled):not([aria-disabled="true"])):hover {
+        translate: 0 -2px;
+    }
+}
+
+:is(button, a[href], summary, [role="button"], [role="tab"]):where(:not(:disabled):not([aria-disabled="true"])):active {
+    translate: 0 0;
+    scale: .975;
+    transition-duration: .1s !important;
+}
+
+/* Fade in tool screens without changing their existing layout or scaling. */
+@keyframes interaction-surface-enter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+:is(#team-screen, #relic-screen, #prep-screen):not([hidden]),
+#art-viewer[style*="display: flex"],
+#warp-details[style*="display: flex"],
+#spec-card-preview:not([hidden]),
+[role="tabpanel"]:not([hidden]),
+details[open] > :not(summary) {
+    animation: interaction-surface-enter .4s var(--interaction-ease);
+}
+
+/* Native dialogs stay in the top layer until their closing fade finishes. */
+dialog {
+    opacity: 0;
+    transition: opacity .3s var(--interaction-ease),
+        display .3s allow-discrete, overlay .3s allow-discrete;
+}
+
+dialog[open] { opacity: 1; }
+dialog:not([open]) { pointer-events: none; }
+
+dialog::backdrop {
+    opacity: 0;
+    transition: opacity .3s var(--interaction-ease),
+        display .3s allow-discrete, overlay .3s allow-discrete;
+}
+
+dialog[open]::backdrop { opacity: 1; }
+
+@starting-style {
+    dialog[open], dialog[open]::backdrop { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :is(button, a[href], summary, [role="button"], [role="tab"], input, select, textarea),
+    :is(button, a[href], summary, [role="button"], [role="tab"], input, select, textarea):active {
+        transition-duration: .01ms !important;
+    }
+    :is(button, a[href], summary, [role="button"], [role="tab"]) {
+        translate: none !important;
+        scale: none !important;
+    }
+}

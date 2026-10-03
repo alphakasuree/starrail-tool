@@ -13,7 +13,7 @@ const server = http.createServer(async (request, response) => {
         const pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
         if (pathname === '/api/hsr/health') {
             response.writeHead(200, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
-            response.end(request.method === 'HEAD' ? '' : JSON.stringify({service:'honkai-uid-relay',version:1})); return;
+            response.end(request.method === 'HEAD' ? '' : JSON.stringify({service:'honkai-uid-relay',version:2})); return;
         }
         if (pathname.startsWith('/api/hsr/')) {
             const result = await queryHsr(pathname.slice('/api/hsr/'.length));

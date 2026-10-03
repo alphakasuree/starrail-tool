@@ -75,7 +75,7 @@
         load(); get('account-dialog').showModal();
     });
     get('account-close').addEventListener('click', () => get('account-dialog').close());
-    get('collection-owned-filter').addEventListener('change', render);
+    get('collection-owned-filter')?.addEventListener('change', render);
     get('collection-render-area').addEventListener('change', event => {
         const {id,field} = event.target.dataset;
         if (!characterCatalog.some(c => c.id === id) || !['owned','e','s'].includes(field)) return;

@@ -22,7 +22,7 @@ const context=vm.createContext({Blob,CompressionStream,DecompressionStream,TextE
     Response:class{constructor(stream){this.stream=stream;}async arrayBuffer(){const r=this.stream.getReader(),chunks=[];let n=0;for(;;){const v=await r.read();if(v.done)break;chunks.push(v.value);n+=v.value.length;}const out=new Uint8Array(n);let i=0;for(const v of chunks){out.set(v,i);i+=v.length;}return out.buffer;}},
     btoa:s=>Buffer.from(s,'binary').toString('base64'),atob:s=>Buffer.from(s,'base64').toString('binary'),
     Event:class{constructor(type){this.type=type;}},
-    document:{getElementById:get,addEventListener(type,fn){events.set(type,[fn]);}},
+    document:{getElementById:id=>['collection-owned-filter','collection-owned-label'].includes(id) ? null : get(id),addEventListener(type,fn){events.set(type,[fn]);}},
     localStorage:{getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)},
     addEventListener(type,fn){events.set(type,[...(events.get(type)||[]),fn]);},dispatchEvent(e){for(const fn of events.get(e.type)||[])fn(e);},
     location:{href:'https://example.com/tool/',hash:'',reload(){}},navigator:{clipboard:{writeText:async()=>{}}},setTimeout:fn=>fn(),
@@ -39,16 +39,17 @@ await emit('collection-render-area','change',{target:{dataset:{id:'1308',field:'
 await emit('collection-render-area','change',{target:{dataset:{id:'1308',field:'e'},value:'2'}});
 await emit('collection-render-area','change',{target:{dataset:{id:'1308',field:'s'},value:'3'}});
 assert.equal(context.HonkaiAccount.get('1308').e,2);assert.equal(context.HonkaiAccount.get('1308').s,3);assert(context.HonkaiAccount.owned().has('1308'));
-// The collection uses manual account data, including after simulated pulls.
+// The collection is an artwork catalog; simulated pulls do not change account ownership.
 const appSource=await read('app.js');
 context.escapeHTML=s=>String(s);context.collectionItems=vm.runInContext('characterCatalog',context);
 get('collection-rarity').value='all';
 vm.runInContext('let currentTab="character";'+appSource.slice(appSource.indexOf('        function generateGridHTML('),appSource.indexOf('        // 앱 초기 구동')),context);
 context.renderCollection();
-assert.match(get('collection-render-area').innerHTML,/data-field="owned"/);
-assert.match(get('collection-render-area').innerHTML,/value="2" selected/);
+assert.match(get('collection-render-area').innerHTML,/data-action="collection-item"/);
+assert.doesNotMatch(get('collection-render-area').innerHTML,/data-field="(?:owned|e|s)"|col-item locked/);
+const catalogCount=get('collection-count').textContent;
 get('collection-owned-filter').checked=true;await emit('collection-owned-filter','change');
-assert.match(get('collection-count').textContent,/1명 보유 · 1 \//);
+assert.equal(get('collection-count').textContent,catalogCount);
 get('collection-search').value='없는 캐릭터';context.renderCollection();assert.match(get('collection-render-area').innerHTML,/검색 결과가 없습니다/);
 get('collection-search').value='';get('collection-owned-filter').checked=false;
 context.banners={character:{featured:context.collectionItems.find(c=>c.id==='1310'),rateUp:1,pool4Up:[]}};
@@ -61,7 +62,8 @@ assert.equal(JSON.stringify([...context.HonkaiAccount.owned()]),accountBeforePul
 assert.equal(vm.runInContext('warpHistory.character.length',context),1);
 vm.runInContext(await read('light-cones.js'),context);
 context.collectionItems=vm.runInContext('[...characterCatalog,...lightConeCatalog]',context);
-vm.runInContext('currentTab="lightcone"',context);context.renderCollection();assert.equal(get('collection-owned-label').hidden,true);
+vm.runInContext('currentTab="lightcone"',context);context.renderCollection();
+assert.match(get('collection-count').textContent,/\d+ \/ \d+종/);
 assert.doesNotMatch(get('collection-render-area').innerHTML,/col-item locked|data-field="owned"/);
 vm.runInContext('currentTab="character"',context);
 const storage=context.HonkaiProfileStorage;

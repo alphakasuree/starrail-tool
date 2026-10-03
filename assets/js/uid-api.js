@@ -9,6 +9,7 @@
         if (!p || !validUid(p.uid) || !string(p.nickname) || !string(p.signature) || !integer(p.level,100) || !integer(p.worldLevel,10) || !integer(p.fetchedAt,8640000000000000) || !(p.achievementCount === null || integer(p.achievementCount,100000)) || !Array.isArray(p.characters) || p.characters.length > 32) throw new Error('저장된 UID 프로필 형식이 올바르지 않습니다.');
         for (const c of p.characters) {
             if (!c || !/^\d{4,6}$/.test(c.id) || !string(c.name) || !integer(c.level,100) || !integer(c.rank,6) || !Array.isArray(c.stats) || c.stats.length > 20 || !c.stats.every(stat) || !Array.isArray(c.relics) || c.relics.length > 6 || !c.relics.every(r=>r && string(r.name) && integer(r.level,15) && stat(r.main) && Array.isArray(r.sub) && r.sub.length <= 4 && r.sub.every(stat)) || !(c.lightCone === null || c.lightCone && /^\d{4,6}$/.test(c.lightCone.id) && string(c.lightCone.name) && integer(c.lightCone.rank,5) && integer(c.lightCone.level,100))) throw new Error('저장된 UID 캐릭터 형식이 올바르지 않습니다.');
+            if (c.relics.some(r => !(r.id == null || /^\d{4,6}$/.test(r.id)) || !(r.rarity == null || integer(r.rarity,5)))) throw new Error('저장된 UID 유물 형식이 올바르지 않습니다.');
         }
         return p;
     }
@@ -26,7 +27,7 @@
                     result.display = result.percent ? `${(result.value * 100).toFixed(1)}%` : Math.floor(result.value).toLocaleString('ko-KR');
                     return result;
                 }),
-                relics:(Array.isArray(c.relics) ? c.relics : []).slice(0,6).map(r => ({name:text(r.name),level:integer(r.level,15) ? r.level : 0,main:stat(r.main_affix),sub:(Array.isArray(r.sub_affix) ? r.sub_affix : []).slice(0,4).map(stat)}))};
+                relics:(Array.isArray(c.relics) ? c.relics : []).slice(0,6).map(r => ({id:/^\d{4,6}$/.test(String(r.id)) ? String(r.id) : null,rarity:integer(r.rarity,5) ? r.rarity : null,name:text(r.name),level:integer(r.level,15) ? r.level : 0,main:stat(r.main_affix),sub:(Array.isArray(r.sub_affix) ? r.sub_affix : []).slice(0,4).map(stat)}))};
         });
         return {uid, nickname:text(raw.player.nickname), level:integer(raw.player.level,100) ? raw.player.level : 0,
             worldLevel:integer(raw.player.world_level,10) ? raw.player.world_level : 0, signature:text(raw.player.signature),
