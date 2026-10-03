@@ -108,7 +108,7 @@ const db = [
         });
         const collectionItems = [...characterCatalog, ...lightConeCatalog];
         characterCatalog.forEach(item => { item.portrait = `assets/character-art/${item.id}.png`; });
-        lightConeCatalog.forEach(item => { item.portrait = item.rarity >= 4 ? `assets/lightcone-art/${item.id}.png` : item.image; });
+        lightConeCatalog.forEach(item => { item.portrait = `assets/lightcone-art/${item.id}.png`; });
         db.forEach(item => {
             const entry = item.type === 'character' ? characterCatalog.find(c => c.id === item.id) : lightConesByName.get(item.name);
             if (entry) Object.assign(item, { id: entry.id, portrait: entry.portrait, path: entry.path, pathName: entry.pathName, element: entry.element, elementName: entry.elementName });
@@ -575,7 +575,7 @@ const db = [
             if (revealQueue.length === 1) {
                 currentRevealIdx = 0;
                 DOM.singleScreen.style.display = 'flex';
-            DOM.singleScreen.focus();
+            DOM.singleScreen.focus({preventScroll: true});
             setTimeout(() => { DOM.singleScreen.style.opacity = '1'; }, 10);
                 nextReveal();
             } else {
@@ -593,7 +593,7 @@ const db = [
             DOM.warp.style.pointerEvents = 'none';
             
             DOM.singleScreen.style.display = 'flex';
-            DOM.singleScreen.focus();
+            DOM.singleScreen.focus({preventScroll: true});
             setTimeout(() => { DOM.singleScreen.style.opacity = '1'; }, 10);
             
             nextReveal();

@@ -167,14 +167,26 @@
         }
         get('profile-login-mode').addEventListener('change', () => {
             const local = get('profile-login-mode').value === 'local', input = get('profile-login-id');
+            get('profile-mode-uid').ariaPressed = String(!local);
+            get('profile-mode-local').ariaPressed = String(local);
             input.value = ''; input.minLength = local ? 1 : 9; input.maxLength = local ? 30 : 10;
             input.inputMode = local ? 'text' : 'numeric';
             input.pattern = local ? '[\\p{L}\\p{N}_.\\-]{1,30}' : '[1-9][0-9]{8,9}';
-            input.placeholder = local ? '기존 저장 프로필 이름' : '게임에 표시된 9~10자리 UID';
-            get('profile-login-label').textContent = local ? '저장 프로필 이름' : '붕괴: 스타레일 UID';
-            get('profile-submit').textContent = local ? '프로필 열기 →' : 'UID 조회하고 연동 →';
-            get('profile-login-error').textContent = ''; input.focus();
+            input.placeholder = local ? '새 이름 또는 저장한 프로필 이름' : '게임에 표시된 9~10자리 UID';
+            get('profile-login-title').textContent = local ? '로컬 프로필로 시작' : '게임 UID 연동';
+            get('profile-login-description').textContent = local ? 'UID 없이 계산기를 사용합니다. 같은 이름의 저장이 있으면 열고, 없으면 새 프로필을 만듭니다.' : '게임 UID로 공개된 프로필과 전시 캐릭터 정보를 불러와 시작합니다.';
+            get('profile-login-label').textContent = local ? '프로필 이름' : '붕괴: 스타레일 UID';
+            get('profile-login-input-help').textContent = local ? '1~30자의 한글·영문·숫자·밑줄·점·하이픈을 사용하세요. 영문 대소문자는 구분하지 않습니다.' : '게임에 표시된 9~10자리 숫자 UID를 입력하세요.';
+            get('profile-submit').textContent = local ? '로컬 프로필로 시작 →' : 'UID 조회하고 연동 →';
+            get('profile-login-error').textContent = '';
         });
+        for (const mode of ['uid', 'local']) {
+            get(`profile-mode-${mode}`).addEventListener('click', () => {
+                if (get('profile-submit').disabled || get('profile-login-mode').value === mode) return;
+                get('profile-login-mode').value = mode;
+                get('profile-login-mode').dispatchEvent(new Event('change'));
+            });
+        }
         get('profile-login-form').addEventListener('submit', async event => {
             event.preventDefault();
             const button = get('profile-submit');
@@ -187,12 +199,13 @@
                 error.textContent = '게임에 표시된 9~10자리 숫자 UID를 입력하세요.'; return;
             }
             if (!/^[\p{L}\p{N}_.-]{1,30}$/u.test(id)) {
-                error.textContent = '아이디는 1~30자의 한글·영문·숫자·밑줄·점·하이픈으로 입력하세요.';
+                error.textContent = '프로필 이름은 1~30자의 한글·영문·숫자·밑줄·점·하이픈으로 입력하세요.';
                 return;
             }
             const label = button.textContent;
             button.disabled = true; get('profile-login-mode').disabled = true; get('profile-login-id').disabled = true;
-            button.textContent = local ? '프로필을 여는 중…' : '게임 정보를 조회하는 중…';
+            get('profile-mode-uid').disabled = true; get('profile-mode-local').disabled = true;
+            button.textContent = local ? '로컬 프로필로 시작하는 중…' : '게임 정보를 조회하는 중…';
             try {
                 const profile = local ? null : await HonkaiUid.lookup(id);
                 // A read-only browser must fail before entering. Existing saves
@@ -209,6 +222,7 @@
                 error.textContent = local ? '저장 공간을 사용할 수 없습니다. 브라우저의 사이트 데이터 저장을 허용하세요.' : failure.message || 'UID 연동에 실패했습니다. 사이트 데이터 저장 설정을 확인하세요.';
             } finally {
                 button.disabled = false; get('profile-login-mode').disabled = false; get('profile-login-id').disabled = false; button.textContent = label;
+                get('profile-mode-uid').disabled = false; get('profile-mode-local').disabled = false;
             }
         });
         get('profile-change').addEventListener('click', () => {
@@ -224,6 +238,6 @@
                 get('profile-account-status').textContent = '프로필 변경을 위해 사이트 데이터 저장을 허용해 주세요.';
             }
         });
-        if (!restoreProfile()) get('profile-login-id').focus();
+        if (!restoreProfile()) get('profile-login-id').focus({preventScroll: true});
     });
 })();

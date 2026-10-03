@@ -1,5 +1,23 @@
 (() => {
     'use strict';
+    const isLocal=['localhost','127.0.0.1','[::1]'].includes(location.hostname);
+    if(isLocal) {
+        // Development must read edited files, including when an old PWA was installed.
+        if('serviceWorker' in navigator) (async()=>{
+            const scope=new URL('./',location.href).href;
+            const registrations=await navigator.serviceWorker.getRegistrations();
+            const registration=registrations.find(item=>item.scope===scope);
+            const controlled=registration && navigator.serviceWorker.controller;
+            if(registration) await registration.unregister();
+            if('caches' in globalThis) {
+                const prefix='honkai-tools-'+new URL(scope).pathname.replace(/[^a-z0-9]/gi,'_')+'-';
+                for(const name of await caches.keys()) if(name.startsWith(prefix)) await caches.delete(name);
+            }
+            // Unregistering alone leaves the current document under the old worker.
+            if(controlled) location.reload();
+        })().catch(error=>console.warn('Local PWA cleanup failed',error));
+        return;
+    }
     const button=document.getElementById('pwa-install');let prompt=null;
     globalThis.addEventListener('beforeinstallprompt',event=>{event.preventDefault();prompt=event;button.hidden=false;});
     button.addEventListener('click',async()=>{if(!prompt)return;await prompt.prompt();const choice=await prompt.userChoice;if(choice.outcome==='accepted')button.hidden=true;prompt=null;});

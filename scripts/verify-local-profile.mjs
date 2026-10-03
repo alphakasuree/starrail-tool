@@ -42,10 +42,32 @@ function browser({ blocked = false, resume = false, readBlocked = false } = {}) 
     return { context, get, login(id) {
         get('profile-login-id').value = id;
         return listeners.get('profile-login-form:submit')({ preventDefault() {} });
+    }, mode(value) {
+        get('profile-login-mode').value = value;
+        listeners.get('profile-login-mode:change')();
     }, change() { listeners.get('profile-change:click')(); },
     get logins() { return logins; }, get reloads() { return reloads; }, get lookups() {return lookups;} };
 }
 const a = browser();
+a.mode('uid');
+assert.match(a.get('profile-login-title').textContent, /UID/);
+assert.match(a.get('profile-login-description').textContent, /공개.*불러와/);
+assert.equal(a.get('profile-login-id').inputMode, 'numeric');
+assert.equal(a.get('profile-login-id').maxLength, 10);
+assert.match(a.get('profile-login-input-help').textContent, /9~10자리/);
+a.get('profile-login-id').value = '100000999';
+a.get('profile-login-error').textContent = '이전 오류';
+a.mode('local');
+assert.equal(a.get('profile-login-id').value, '');
+assert.equal(a.get('profile-login-error').textContent, '');
+assert.equal(a.get('profile-login-title').textContent, '로컬 프로필로 시작');
+assert.match(a.get('profile-login-description').textContent, /같은 이름.*열고.*새 프로필/);
+assert.match(a.get('profile-login-id').placeholder, /새 이름/);
+assert.equal(a.get('profile-login-id').inputMode, 'text');
+assert.equal(a.get('profile-login-id').maxLength, 30);
+assert.match(a.get('profile-login-input-help').textContent, /1~30자/);
+assert.equal(a.get('profile-submit').textContent, '로컬 프로필로 시작 →');
+assert.equal(a.lookups, 0, 'Switching entry modes must not look up a UID');
 assert.equal(a.context.HonkaiProfileStorage.getItem('warp'), null);
 assert.throws(() => a.context.HonkaiProfileStorage.setItem('warp', '{}'));
 a.login('  OLDID  ');
@@ -61,6 +83,10 @@ a.change(); assert.equal(a.reloads, 0);
 a.context.isWarping = false;
 a.change(); assert.equal(a.reloads, 1);
 const b = browser(); b.login('another');
+assert.equal(b.context.HonkaiProfileStorage.id, 'another');
+assert.equal(b.context.HonkaiProfileStorage.linkedUid, false);
+assert.equal(b.logins, 1);
+assert.equal(b.lookups, 0, 'New local profiles must not look up a UID');
 for (const section of ['warp', 'relic', 'teams']) assert.equal(b.context.HonkaiProfileStorage.getItem(section), null);
 b.context.HonkaiProfileStorage.setItem('teams', '["other party"]');
 const c = browser(); c.login('oldid');
@@ -88,7 +114,11 @@ manual.login('oldid');manual.context.HonkaiProfileStorage.renameProfile('renamed
 assert.equal(browser({resume:true}).context.HonkaiProfileStorage.id,'renamed');
 manual.context.HonkaiProfileStorage.deleteProfile();
 assert.equal(browser({resume:true}).context.HonkaiProfileStorage.id,null,'Deleted profile must not be restored');
-const uidLogin = browser();uidLogin.get('profile-login-mode').value='uid';await uidLogin.login('100000999');
+const uidLogin = browser();uidLogin.mode('local');uidLogin.mode('uid');
+assert.equal(uidLogin.get('profile-login-title').textContent, '게임 UID 연동');
+assert.equal(uidLogin.get('profile-login-label').textContent, '붕괴: 스타레일 UID');
+assert.equal(uidLogin.get('profile-submit').textContent, 'UID 조회하고 연동 →');
+await uidLogin.login('100000999');
 assert.equal(uidLogin.lookups,1);
 const uidReload = browser({resume:true});
 assert.equal(uidReload.context.HonkaiProfileStorage.id,'100000999');assert.equal(uidReload.context.HonkaiProfileStorage.linkedUid,true);

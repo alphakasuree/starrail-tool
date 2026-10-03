@@ -26,14 +26,14 @@ function resize(width, height, desktop = true) {
     assert.equal(frames.size, 1, 'Resize events should coalesce into one frame');
     const callback = [...frames.values()][0]; frames.clear(); callback();
 }
-for (const [width, height, expected] of [[1920, 1080, .75], [3840, 2160, 1.5], [1280, 720, .5], [1920, 950, 950 / 1440], [3440, 1440, 1]]) {
+for (const [width, height, expected] of [[1920, 1080, .75], [1366, 768, 768 / 1440], [3840, 2160, 1.5], [1280, 720, .5], [1920, 950, 950 / 1440], [3440, 1440, 1]]) {
     resize(width, height);
     const scale = Number(properties.get('--ui-scale'));
     assert.equal(scale, expected);
-    const canvasWidth = parseFloat(properties.get('--ui-vw')) * 100;
-    const canvasHeight = parseFloat(properties.get('--ui-vh')) * 100;
-    const left = parseFloat(properties.get('--ui-left')), top = parseFloat(properties.get('--ui-top'));
-    assert.equal(left, 0); assert.equal(top, 0);
+    const canvasWidth = parseFloat(properties.get('--scene-vw')) * 100;
+    const canvasHeight = parseFloat(properties.get('--scene-vh')) * 100;
+    assert.equal(properties.has('--ui-vw'), false, 'Native viewport units must never be overwritten');
+    assert.equal(properties.has('--ui-vh'), false);
     assert(Math.abs(canvasWidth * scale - width) < 1e-6, 'Canvas must fill the viewport width without side bars');
     assert(Math.abs(canvasHeight * scale - height) < 1e-6, 'Canvas must fill the viewport height without cropping');
 }
@@ -44,8 +44,23 @@ resize(2560, 1440);
 assert.equal(root.dataset.scaledViewport, 'true');
 assert.equal(properties.get('--ui-scale'), '1');
 const css = await read('assets/css/viewport-scale.css');
-assert.match(css, /dialog:modal/);
+assert.doesNotMatch(css, /html\[data-scaled-viewport\] (?:body|dialog:modal|#prep-screen)/,
+    'Tools and dialogs must not inherit scene transforms or inverse scaling');
+assert.match(css, /:is\(#lobby-screen, #anim-screen, #single-reveal-screen, #result-screen, #collection-modal, #art-viewer\)/);
+for (const name of await fs.readdir(new URL('../assets/css/', import.meta.url))) {
+    if (!name.endsWith('.css') || name === 'viewport-scale.css') continue;
+    assert.doesNotMatch(await read(`assets/css/${name}`), /\[data-scaled-viewport\][^{]*dialog/,
+        `${name}: native dialogs must not retain legacy scene centering/scaling overrides`);
+}
 assert.match(css, /transform-origin: top left/);
+assert.match(css, /html\s*\{[^}]*overflow:\s*clip/,
+    'Root must not scroll when a scaled scene receives focus or clicks');
+assert.match(css, /:is\(#anim-screen, #single-reveal-screen, #result-screen\)\s*\{\s*position:\s*fixed/,
+    'Reveal backgrounds must remain anchored to the viewport');
+const app = await read('assets/js/app.js');
+assert.equal([...app.matchAll(/DOM\.singleScreen\.focus\(\{preventScroll: true\}\)/g)].length, 2,
+    'Both normal and skipped reveal entry must focus without scrolling');
+assert.doesNotMatch(app, /DOM\.singleScreen\.focus\(\)/);
 assert.match(css, /width: calc\(100vw \/ var\(--ui-scale\)\)/);
 assert.doesNotMatch(css, /left: var\(--ui-left\)|top: var\(--ui-top\)/,
     'Cached centering offsets must never create side bars');
@@ -53,4 +68,4 @@ for (const name of ['app', 'profile-storage', 'relic-calculator', 'team-builder'
     assert.doesNotMatch(await read(`assets/css/${name}.css`), /\d+(?:\.\d+)?(?:dvh|vw|vh)\b/,
         `Viewport sizes in ${name} must use the same logical design size`);
 }
-console.log('PASS: uniform QHD/FHD/4K scaling, full viewport coverage, ultrawide fitting, resize coalescing, mobile reset and modal scaling.');
+console.log('PASS: scoped scene scaling, native tool/dialog units, HD/FHD/QHD/4K coverage, resize coalescing and mobile reset.');

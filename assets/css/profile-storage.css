@@ -1,13 +1,37 @@
 #profile-login-screen { position: fixed; inset: 0; z-index: 200; display: grid; place-items: safe center; padding: 24px; overflow-y: auto; background: radial-gradient(ellipse at top, #283154, #080d18 70%); color: #edf2ff; }
 #profile-login-screen[hidden] { display: none; }
+/* Native size and safe centering also allow short screens to scroll the form. */
+#profile-login-screen { user-select: text; font-size: 16px; }
+#profile-login-screen input, #profile-login-screen select, #profile-login-screen button { min-height: 48px; }
+@media (max-width: 520px) {
+    #profile-login-screen { padding: 20px 16px; }
+    #profile-login-screen .profile-login-card { padding: 24px 20px; }
+}
 .profile-login-card { width: min(100%, 420px); padding: 32px; border: 1px solid #657296; border-radius: 24px; background: #142036e8; box-shadow: 0 20px 70px #0006; }
 .profile-login-card h1 { font-size: 28px; font-weight: 900; margin: 8px 0 18px; }
-.profile-login-card p { font-size: 13px; color: #acbdd4; line-height: 1.8; }
-.profile-login-card label { display: block; margin: 24px 0 8px; font-size: 13px; }
+.profile-login-card p { font-size: 15px; color: #acbdd4; line-height: 1.8; }
+.profile-login-card label { display: block; margin: 24px 0 8px; font-size: 14px; }
 .profile-login-card input, .profile-login-card select, .profile-import-panel select { width: 100%; padding: 14px; border: 1px solid #60738e; border-radius: 10px; background: #091222; color: white; font: inherit; }
 .profile-login-card input:focus { outline: 2px solid #b8caff; outline-offset: 2px; }
 .profile-login-card button { width: 100%; padding: 14px; margin: 16px 0; border: 0; border-radius: 10px; background: #c2d3ff; color: #10203e; font: inherit; font-weight: 800; cursor: pointer; }
 #profile-login-error { color: #ffb7bc; min-height: 24px; }
+.profile-login-intro strong { color: #edf2ff; font-weight: 700; }
+.profile-mode-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 20px 0; }
+.profile-login-card .profile-mode-button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 66px; padding: 10px 8px; margin: 0; border: 1px solid #526584; background: #0c1729; color: #acbdd4; font-size: 14px; line-height: 1.5; transition: background-color 260ms ease, border-color 260ms ease, color 260ms ease, box-shadow 260ms ease; }
+.profile-mode-button span { font-size: 12px; font-weight: 500; }
+.profile-login-card .profile-mode-button:hover { background-color: #243553; border-color: #899dc1; color: #edf2ff; }
+.profile-login-card .profile-mode-button[aria-pressed="true"] { background-color: #c2d3ff; border-color: #d6e1ff; color: #10203e; box-shadow: 0 0 18px #9cbcff26; }
+@media (prefers-reduced-motion: reduce) { .profile-login-card .profile-mode-button { transition: none; } }
+.profile-login-card h1 { line-height: 1.35; margin-bottom: 12px; }
+.profile-login-card label { margin-top: 16px; }
+.profile-login-card #profile-login-description { line-height: 1.65; }
+#profile-login-error:empty { min-height: 0; }
+.profile-login-card #profile-login-input-help { margin: 8px 0 0; font-size: 13px; line-height: 1.6; }
+.profile-login-card .profile-login-storage-note { font-size: 13px; line-height: 1.7; margin-bottom: 16px; }
+.profile-lookup-info { border-top: 1px solid #405273; padding-top: 8px; }
+.profile-lookup-info summary { display: list-item; padding: 12px 0; cursor: pointer; font-size: 14px; color: #c2d3ff; }
+.profile-lookup-info p { margin: 8px 0 12px; font-size: 13px; }
+.profile-login-card select:focus-visible, .profile-login-card button:focus-visible, .profile-lookup-info summary:focus-visible { outline: 2px solid #b8caff; outline-offset: 2px; }
 #profile-file-help { padding: 12px; margin-bottom: 16px; border: 1px solid #8d7951; border-radius: 10px; background: #342d20; }
 .profile-server-link { display: inline-block; color: #c2d3ff; text-decoration: underline; font-weight: 800; }
 #uid-showcase { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; margin-top: 16px; }

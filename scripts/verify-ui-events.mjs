@@ -4,6 +4,15 @@ import vm from 'node:vm';
 
 const read = name => fs.readFile(new URL(`../${name}`, import.meta.url), 'utf8');
 const html = await read('index.html');
+const interactions = await read('assets/css/interactions.css');
+const fullscreenFeedback = interactions.match(/:is\(#single-reveal-screen, \.warp-signal-open\)\s*\{([^}]+)\}/);
+assert(fullscreenFeedback, 'Fullscreen reveal targets need an override for shared button feedback');
+assert.match(fullscreenFeedback[1], /scale:\s*none\s*;/,
+    'Pressing the reveal surface must not shrink the scene background');
+assert.match(fullscreenFeedback[1], /translate:\s*none\s*;/,
+    'Hovering the reveal surface must not shift the scene background');
+assert.doesNotMatch(fullscreenFeedback[1], /\btransform\s*:/,
+    'Interaction feedback must preserve the viewport scaling transform');
 const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*>/g)].map(match => match[1]);
 assert.equal(scripts.filter(src => src === 'assets/js/ui-events.js').length, 1,
     'HTML must load the delegated event handlers exactly once');

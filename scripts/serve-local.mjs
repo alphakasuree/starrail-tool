@@ -26,7 +26,7 @@ const server = http.createServer(async (request, response) => {
         if (!allowed) { response.writeHead(404); response.end(); return; }
         const info = await stat(file);
         if (!info.isFile()) { response.writeHead(404); response.end(); return; }
-        response.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Content-Length': info.size, 'Cache-Control': 'no-cache' });
+        response.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Content-Length': info.size, 'Cache-Control': 'no-store' });
         if (request.method === 'HEAD') { response.end(); return; }
         createReadStream(file).on('error', () => response.destroy()).pipe(response);
     } catch (error) {

@@ -6,7 +6,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Rogue",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20000.png"
     },
     {
         "id":  "20001",
@@ -14,7 +14,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Priest",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20001.png"
     },
     {
         "id":  "20002",
@@ -22,7 +22,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Warrior",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20002.png"
     },
     {
         "id":  "20003",
@@ -30,7 +30,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Knight",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20003.png"
     },
     {
         "id":  "20004",
@@ -38,7 +38,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Warlock",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20004.png"
     },
     {
         "id":  "20005",
@@ -46,7 +46,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Shaman",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20005.png"
     },
     {
         "id":  "20006",
@@ -54,7 +54,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Mage",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20006.png"
     },
     {
         "id":  "20007",
@@ -62,7 +62,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Rogue",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20007.png"
     },
     {
         "id":  "20008",
@@ -70,7 +70,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Priest",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20008.png"
     },
     {
         "id":  "20009",
@@ -78,7 +78,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Warrior",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20009.png"
     },
     {
         "id":  "20010",
@@ -86,7 +86,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Knight",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20010.png"
     },
     {
         "id":  "20011",
@@ -94,7 +94,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Warlock",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20011.png"
     },
     {
         "id":  "20012",
@@ -102,7 +102,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Shaman",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20012.png"
     },
     {
         "id":  "20013",
@@ -110,7 +110,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Mage",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20013.png"
     },
     {
         "id":  "20014",
@@ -118,7 +118,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Rogue",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20014.png"
     },
     {
         "id":  "20015",
@@ -126,7 +126,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Priest",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20015.png"
     },
     {
         "id":  "20016",
@@ -134,7 +134,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Warrior",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20016.png"
     },
     {
         "id":  "20017",
@@ -142,7 +142,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Knight",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20017.png"
     },
     {
         "id":  "20018",
@@ -150,7 +150,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Warlock",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20018.png"
     },
     {
         "id":  "20019",
@@ -158,7 +158,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Shaman",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20019.png"
     },
     {
         "id":  "20020",
@@ -166,7 +166,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Mage",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20020.png"
     },
     {
         "id":  "20021",
@@ -174,7 +174,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Memory",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20021.png"
     },
     {
         "id":  "20022",
@@ -182,7 +182,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Memory",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20022.png"
     },
     {
         "id":  "20023",
@@ -190,7 +190,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Elation",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20023.png"
     },
     {
         "id":  "20024",
@@ -198,7 +198,7 @@ const lightConeCatalog = [
         "rarity":  3,
         "type":  "lightcone",
         "path":  "Elation",
-        "image":  "assets/images/lightcone-3star.png"
+        "image":  "assets/lightcones/20024.png"
     },
     {
         "id":  "21000",

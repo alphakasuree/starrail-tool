@@ -3,7 +3,7 @@
 
         /* 공통 색상 변수 설정 */
         :root {
-            --bg-color: #050814;
+            --bg-color: #111d38;
             --c-5star: #ffcc66;  /* 5성 금색 */
             --c-4star: #c776ff;  /* 4성 보라색 */
             --c-3star: #54a2ff;  /* 3성 파란색 */
@@ -339,3 +339,156 @@
             .warp-actions { gap: 10px; }
             .warp-pull { flex: 1; min-width: 0; padding: 10px; font-size: 14px; }
         }
+
+/* Celestial palette: luminous skies, readable surfaces and a hue for each tool. */
+:root {
+    --sky-background:
+        radial-gradient(ellipse at 12% 12%, #598af65c, transparent 48%),
+        radial-gradient(ellipse at 88% 22%, #ba78ee4a, transparent 46%),
+        radial-gradient(ellipse at 55% 100%, #46d6cf30, transparent 52%),
+        linear-gradient(145deg, #1c3153, #24213f 58%, #122d40);
+    --surface-background: linear-gradient(135deg, #304966eb, #242d49f5);
+    --surface-border: #a9c9f247;
+}
+
+#bg-stars, #lobby-screen, #profile-login-screen {
+    background: var(--sky-background);
+}
+#lobby-screen, #profile-login-screen { isolation: isolate; }
+#lobby-screen::before, #profile-login-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle, #e6f8ff9e 1px, transparent 1.8px),
+        radial-gradient(circle, #dec7ff78 .8px, transparent 1.5px),
+        linear-gradient(125deg, transparent 26%, #b2dfff09 26.2%, transparent 26.5%, transparent 68%, #eccfff0a 68.2%, transparent 68.5%);
+    background-size: 137px 131px, 211px 191px, 100% 100%;
+    background-position: 19px 29px, 73px 61px, center;
+}
+.profile-login-card {
+    border-color: #c4d9ff66;
+    background: linear-gradient(145deg, #354968f2, #27334ff5);
+    box-shadow: 0 24px 80px #07122e40, inset 0 1px #ffffff20;
+}
+.profile-login-card p { color: #c5d3e9; }
+.profile-login-card > .font-orbitron { color: #e4eaff; }
+.profile-login-card input, .profile-login-card select {
+    background: #1b2d48;
+    border-color: #8aaedb80;
+}
+.profile-login-card .profile-mode-button { background: #213553; border-color: #8ca9d266; }
+.profile-login-card .profile-mode-button[aria-pressed="true"], #profile-submit {
+    background: linear-gradient(115deg, #c4dcff, #d9c8ff);
+    color: #192844;
+}
+.profile-account button {
+    background: #314664a6;
+    border-color: #b5d1f24d;
+    box-shadow: inset 0 1px #ffffff12;
+}
+.profile-account button:hover { background: #435e83; }
+#lobby-screen > .team-muted { color: #bbcae3; }
+.lobby-pickup {
+    background: radial-gradient(ellipse at 60% 20%, #a9b5e1, #5c74aa 45%, #2b3e6b);
+    border-color: #b6d6ff80;
+    box-shadow: 0 18px 40px #08152d38, inset 0 1px #ffffff33;
+}
+.lobby-pickup.cone {
+    background: radial-gradient(ellipse at 50% 25%, #dbc2a1, #9278b4 48%, #3d416a);
+    border-color: #e6d0ac80;
+}
+.lobby-pickup-copy {
+    background: linear-gradient(180deg, transparent 30%, #213258a6 62%, #192a49f5);
+}
+.lobby-pickup.cone .lobby-pickup-copy {
+    background: linear-gradient(180deg, transparent 30%, #403456a6 62%, #302847f5);
+}
+.lobby-pickup-copy small { color: #e4d8ff; }
+.lobby-pickup-copy p { color: #d4def0; }
+.lobby-menu > button {
+    --tile-light: #567cc0;
+    --tile-dark: #283f69;
+    --tile-border: #a9c9ff;
+    background: radial-gradient(ellipse at 0 0, #ffffff18, transparent 70%), linear-gradient(120deg, var(--tile-light), var(--tile-dark));
+    border: 1px solid color-mix(in srgb, var(--tile-border) 60%, transparent);
+    box-shadow: 0 8px 24px #08152d30, inset 0 1px #ffffff20;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.lobby-menu > .spec-lobby-button { --tile-light: #7864a1; --tile-dark: #414b78; --tile-border: #ead4ff; }
+.lobby-menu > .prep-lobby-button { --tile-light: #916f47; --tile-dark: #514463; --tile-border: #ffe0a2; }
+.lobby-menu > #relic-lobby-button { --tile-light: #347f83; --tile-dark: #28516b; --tile-border: #a3f5df; }
+.lobby-menu > #team-lobby-button { --tile-light: #805baa; --tile-dark: #47416f; --tile-border: #e6bcff; }
+.lobby-menu > button:hover {
+    transform: translateY(-3px);
+    border-color: var(--tile-border);
+    box-shadow: 0 12px 30px #08152d40, inset 0 0 24px #ffffff12;
+}
+#team-screen {
+    background: radial-gradient(ellipse at 92% 0, #ac79e74d, transparent 55%), radial-gradient(ellipse at 0 85%, #5884dd30, transparent 55%), linear-gradient(135deg, #29344f, #28233e);
+}
+#relic-screen {
+    background: radial-gradient(ellipse at 88% 0, #5dd9be40, transparent 55%), radial-gradient(ellipse at 0 80%, #6194e633, transparent 55%), linear-gradient(135deg, #203b4d, #202d46);
+}
+#prep-screen {
+    background: radial-gradient(ellipse at 85% 0, #e5b57538, transparent 50%), radial-gradient(ellipse at 0 80%, #9980e53b, transparent 55%), linear-gradient(135deg, #34334e, #25324b);
+}
+.team-controls, .team-recommendation, .relic-panel, .prep-panel,
+.tool-card, .save-card, .warp-details-box, .collection-box {
+    background: var(--surface-background);
+    border-color: var(--surface-border);
+    box-shadow: 0 12px 32px #07142b26, inset 0 1px #ffffff0f;
+}
+.team-recommendation { background: linear-gradient(125deg, #4d3d65eb, #2b3b56f5); }
+.team-member, .prep-metrics > div, .tool-metric, .account-character,
+.uid-character, .collection-account { background: #29405b; border-color: #93b9de40; }
+.team-controls input[type=search], .team-controls select,
+#prep-screen input:not([type=checkbox]), #prep-screen select,
+.tool-card input:not([type=checkbox]), .tool-card select,
+.collection-tools input, .collection-tools select { background: #1e304c; border-color: #8aaedb66; }
+#relic-screen .relic-workspace-card {
+    background: var(--surface-background);
+    border-color: var(--surface-border);
+}
+#relic-form select, #relic-form input,
+#relic-screen .tool-card input, #relic-screen .tool-card select {
+    background: #1e354b;
+    border-color: #8ac4ce66;
+}
+.relic-workspace-nav, #relic-screen .relic-compare-slot,
+#relic-screen #speed-result .tool-metric { background: #294557; border-color: #93cbd240; }
+.relic-score-ring > div { background: radial-gradient(circle, #345a66, #22384f); }
+.account-dialog, #save-dialog {
+    background: var(--sky-background);
+    border-color: #b2ccf259;
+}
+#collection-modal { background: linear-gradient(145deg, #213454f5, #2c2444f5); }
+.tab-btn { background: #293b59; color: #c4d5ed; }
+.tab-btn.active { background: #3b5278; }
+.spec-dialog::backdrop {
+    background: linear-gradient(135deg, #1b2c4966, #30264280);
+}
+.spec-profile-bar, #spec-card-status:not(:empty) {
+    background: #35496933;
+    border-color: #bbd3f22e;
+}
+.spec-character {
+    background: radial-gradient(ellipse at 50% 20%, #818fbb, #455a86 58%, #2b3b5a);
+    border-color: #c4d9ff47;
+    box-shadow: 0 12px 28px #09172f30;
+}
+.spec-character:nth-child(3n + 2) { background: radial-gradient(ellipse at 50% 20%, #af90b9, #75608e 58%, #403958); }
+.spec-character:nth-child(3n) { background: radial-gradient(ellipse at 50% 20%, #82b5b5, #527f90 58%, #2d465d); }
+.spec-character-copy { background: linear-gradient(transparent, #223453e8 55%, #1f304e); }
+#spec-card-preview, .spec-dialog[data-view=card] #spec-card-preview { background: #26375040; border-color: #bdd4f22e; box-shadow: none; }
+.warp-stage {
+    background: radial-gradient(ellipse at 78% 28%, #db97c0, #8e6fa4 36%, #404675 75%, #293753);
+}
+#result-screen { background: radial-gradient(ellipse at 50% 0, #8171ac55, transparent 65%), #1b2948f5; }
+#single-reveal-screen, #art-viewer { background: radial-gradient(ellipse at center, #606293, #1a2a46 80%); }
+@media (prefers-reduced-motion: reduce) {
+    .lobby-menu > button { transition: none; }
+    .lobby-menu > button:hover { transform: none; }
+}

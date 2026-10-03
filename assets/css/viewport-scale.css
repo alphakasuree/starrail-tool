@@ -7,37 +7,24 @@
 @supports (height: 1dvh) {
     :root { --ui-dvh: 1dvh; }
 }
-html { background: #050814; overflow: hidden; }
-html[data-scaled-viewport] body {
-    position: absolute;
+html { background: #050814; overflow: hidden; overflow: clip; }
+body { position: relative; height: calc(100 * var(--ui-dvh)); overflow: hidden; overflow: clip; }
+/* Focus and clicks must not pan the document around oversized logical scenes.
+   Tools keep their own scrolling; reveal backgrounds stay pinned to the viewport. */
+:is(#anim-screen, #single-reveal-screen, #result-screen) { position: fixed; }
+/* Only composition-driven scenes scale. Their common ancestor, tools,
+   dialogs and warp controls always retain native viewport units. */
+html[data-scaled-viewport] :is(#lobby-screen, #anim-screen, #single-reveal-screen, #result-screen, #collection-modal, #art-viewer) {
+    position: fixed;
+    --ui-vw: var(--scene-vw);
+    --ui-vh: var(--scene-vh);
+    --ui-dvh: var(--scene-dvh);
+    inset: auto;
     left: 0;
     top: 0;
     width: calc(100vw / var(--ui-scale));
-    height: calc(100vh / var(--ui-scale));
-    height: calc(100dvh / var(--ui-scale));
+    height: calc(100 * var(--scene-dvh));
     transform: scale(var(--ui-scale));
     transform-origin: top left;
 }
-/* Native modal dialogs occupy the top layer and need their own scaling. */
-html[data-scaled-viewport] dialog:modal {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    right: auto;
-    bottom: auto;
-    margin: 0;
-    transform: translate(-50%, -50%) scale(var(--ui-scale));
-    transform-origin: center;
-}
-
-/* The lobby uses a 2560px canvas; the planner needs native-size text. */
-html[data-scaled-viewport] #prep-screen {
-    inset: auto;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    height: 100dvh;
-    transform: scale(calc(1 / var(--ui-scale)));
-    transform-origin: top left;
-}
+/* Planner needs no inverse transform now that body is unscaled. */

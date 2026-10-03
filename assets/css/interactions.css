@@ -26,6 +26,15 @@
     transition-duration: .1s !important;
 }
 
+/* Fullscreen click targets are scene surfaces, so button feedback must not
+   shrink their backgrounds or move the entire scene on hover. Keep the
+   separate viewport transform intact. */
+:is(#single-reveal-screen, .warp-signal-open) {
+    translate: none;
+    scale: none;
+    transition-property: opacity !important;
+}
+
 /* Fade in tool screens without changing their existing layout or scaling. */
 @keyframes interaction-surface-enter {
     from { opacity: 0; }
