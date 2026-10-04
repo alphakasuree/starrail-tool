@@ -105,7 +105,8 @@ class Element {
     showModal() {this.open=true;}
     close() {this.open=false;this.listeners.close?.();}
 }
-const elements = Object.fromEntries(['character-chat','chat-input','chat-send','chat-log','chat-status','chat-open','chat-starters','chat-form','profile-login-screen','chat-close'].map(id=>[id,new Element()]));
+const elements = Object.fromEntries(['character-chat','chat-input','chat-send','chat-log','chat-status','chat-open','chat-starters','chat-form','profile-login-screen','chat-close','lobby-screen'].map(id=>[id,new Element()]));
+elements['lobby-screen'].style = {};
 const timers = new Map(), frames = new Map(); let timerId=0, frameId=0, browserCalls=0, observer, mode='quota', release;
 const motion={matches:false};
 const browserFetch = async (url, options) => {
@@ -129,12 +130,25 @@ assert.equal(elements['chat-open'].hidden,false);
 elements['chat-open'].listeners.click(); await flush();
 assert.equal(elements['chat-send'].disabled,false);
 assert.equal(elements['chat-status'].textContent,'','No ready/connection notice');
+const lobby = elements['lobby-screen'];
+const callsBeforeLeaving = browserCalls;
+lobby.style.opacity = '0'; observer();
+assert.equal(elements['chat-open'].hidden,true,'Leaving the lobby hides the launcher as the fade begins');
+assert.equal(elements['character-chat'].open,false,'Leaving the lobby closes an open chat');
+lobby.style.display = 'none'; observer();
+elements['chat-open'].listeners.click(); await flush();
+assert.equal(browserCalls,callsBeforeLeaving,'Other screens cannot open chat or call the API');
+lobby.style.display = 'flex'; observer();
+assert.equal(elements['chat-open'].hidden,true,'The launcher stays hidden until the lobby becomes visible');
+lobby.style.opacity = '1'; observer();
+assert.equal(elements['chat-open'].hidden,false,'Returning to the lobby restores the launcher');
+elements['chat-open'].listeners.click(); await flush();
 elements['chat-input'].value='오늘 좀 지쳤어';
 await elements['chat-form'].listeners.submit({preventDefault(){}});
 assert.equal(elements['chat-send'].disabled,true);
 assert.equal(elements['chat-input'].value,'오늘 좀 지쳤어');
 assert.match(elements['chat-status'].textContent,/다시 확인/);
-assert.equal(browserCalls,2,'No automatic resend');
+assert.equal(browserCalls,callsBeforeLeaving+2,'Reopening checks availability once, with no automatic resend');
 const expiry=[...timers.values()].find(t=>t.delay>60000); assert(expiry); expiry.fn(); await flush();
 assert.equal(elements['chat-send'].disabled,false);
 mode='wait';

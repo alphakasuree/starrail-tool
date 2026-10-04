@@ -3,10 +3,10 @@
     const byId = id => document.getElementById(id);
     const dialog = byId('character-chat'), input = byId('chat-input'), send = byId('chat-send');
     const log = byId('chat-log'), status = byId('chat-status'), launcher = byId('chat-open');
-    const entry = byId('profile-login-screen');
+    const entry = byId('profile-login-screen'), lobby = byId('lobby-screen');
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     let history = [], busy = false, ready = false, controller = null, revision = 0, checkRevision = 0, retryTimer;
-    const allowed = () => entry.hidden;
+    const allowed = () => entry.hidden && !lobby.hidden && lobby.style.display !== 'none' && lobby.style.opacity !== '0';
     const endpoint = () => {
         const base = new URL(globalThis.HonkaiUidConfig?.baseUrl || '/api/hsr', location.origin);
         base.pathname = base.pathname.replace(/\/hsr\/?$/, '/chat');
@@ -90,7 +90,9 @@
         if (!allowed() && dialog.open) dialog.close();
         syncControls();
     }
-    new MutationObserver(syncAccess).observe(entry, {attributes:true, attributeFilter:['hidden']});
+    const accessObserver = new MutationObserver(syncAccess);
+    accessObserver.observe(entry, {attributes:true, attributeFilter:['hidden']});
+    accessObserver.observe(lobby, {attributes:true, attributeFilter:['hidden', 'style']});
     launcher.addEventListener('click', () => { if (!allowed()) return; dialog.showModal(); input.focus(); checkConnection(); });
     byId('chat-close').addEventListener('click', () => dialog.close());
     dialog.addEventListener('close', () => {reset(); clearTimeout(retryTimer); ++checkRevision;});
