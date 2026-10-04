@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="assets/css/interactions.css">
     <link rel="stylesheet" href="assets/css/accessibility.css">
     <link rel="stylesheet" href="assets/css/viewport-scale.css?v=20261003-native-tools">
+    <link rel="stylesheet" href="assets/css/character-chat.css">
     <script src="assets/js/viewport-scale.js?v=20261003-native-tools"></script>
     <script src="assets/js/webp-manifest.js"></script>
     <script src="assets/js/webp-images.js"></script>
@@ -426,5 +427,17 @@
     <script src="assets/js/planner-tools.js"></script>
     <script src="assets/js/pwa.js"></script>
     <script src="assets/js/ui-events.js"></script>
+    <button id="chat-open" hidden type="button" aria-haspopup="dialog" aria-controls="character-chat"><img src="assets/characters/1415.webp" alt=""><span>키레네에게 이야기하기</span></button>
+    <dialog id="character-chat" aria-labelledby="chat-title">
+        <div class="chat-shell">
+            <header class="chat-header"><img class="chat-avatar" src="assets/characters/1415.webp" alt="키레네"><div><h2 id="chat-title">키레네</h2><p class="chat-subtitle">네 이야기가 머무는 작은 쉼터</p></div><button id="chat-close" class="chat-icon" type="button" aria-label="대화 닫기">×</button></header>
+            <div id="chat-log" role="log" aria-label="키레네와의 대화" aria-live="polite" aria-relevant="additions" tabindex="0"></div>
+            <div id="chat-starters" aria-label="대화 시작하기"><button type="button">오늘 좀 지쳤어</button><button type="button">내 고민을 들어줄래?</button><button type="button">그냥 같이 이야기하고 싶어</button></div>
+            <p id="chat-status" role="status" aria-live="polite"></p>
+            <form id="chat-form"><label for="chat-input" class="sr-only">키레네에게 보낼 이야기</label><textarea id="chat-input" rows="2" maxlength="1000" placeholder="마음에 남은 이야기를 들려줘…" required></textarea><button id="chat-send" type="submit" disabled>보내기</button></form>
+            <p class="chat-note">대화 내용은 답변 생성을 위해 Google에 전송되며 무료 API에서는 서비스 개선에 사용될 수 있어요. 민감한 개인정보는 적지 마세요. 사이트는 대화를 저장하지 않고 창을 닫으면 지워져요. 팬 AI 역할극이며 전문 상담을 대신하지 않아요.</p>
+        </div>
+    </dialog>
+    <script src="assets/js/character-chat.js"></script>
 </body>
 </html>

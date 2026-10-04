@@ -7,7 +7,7 @@ $healthUrl = 'http://127.0.0.1:5510/api/hsr/health'
 function Test-UidServer {
     try {
         $health = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2
-        return $health.service -eq 'honkai-uid-relay' -and $health.version -eq 2
+        return $health.service -eq 'honkai-uid-relay' -and $health.version -eq 2 -and $health.freeChat -eq 2
     } catch { return $false }
 }
 

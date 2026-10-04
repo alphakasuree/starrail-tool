@@ -28,6 +28,7 @@ jobs:
           UID_API_BASE_URL: ${{ vars.UID_API_BASE_URL }}
           UID_SITE_ORIGIN: ${{ vars.UID_SITE_ORIGIN }}
           UID_WORKER_NAME: ${{ vars.UID_WORKER_NAME }}
+          GEMINI_FREE_TIER_CONFIRMED: ${{ vars.GEMINI_FREE_TIER_CONFIRMED }}
       - name: Deploy UID relay to Cloudflare
         if: steps.uid.outputs.deploy_worker == 'true'
         id: uid-worker
