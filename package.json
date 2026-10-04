@@ -7,6 +7,7 @@
     "test": "node scripts/verify.mjs && node scripts/verify-spec-card.mjs && node scripts/verify-local-profile.mjs && node scripts/verify-uid-link.mjs && node scripts/verify-uid-fallback.mjs && node scripts/verify-pages-uid.mjs && node scripts/verify-warp-prep.mjs && node scripts/verify-save-transfer.mjs && node scripts/verify-ui-events.mjs && node scripts/verify-viewport-scale.mjs && node scripts/verify-planner-tools.mjs"
   },
   "devDependencies": {
+    "sharp": "^0.35.5",
     "tailwindcss": "3.4.17"
   }
 }

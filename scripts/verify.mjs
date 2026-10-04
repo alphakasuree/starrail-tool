@@ -33,6 +33,11 @@ for (const item of items) {
     if (item.type === 'character') references.add(`assets/character-art/${item.id}.png`);
     else if (item.rarity >= 4) references.add(`assets/lightcone-art/${item.id}.png`);
 }
+// Every WebP listed in the manifest must exist next to its PNG fallback.
+vm.runInContext(await read('assets/js/webp-manifest.js'), catalogsContext);
+for (const [folder, ids] of Object.entries(catalogsContext.HonkaiWebpManifest)) {
+    for (const id of ids) references.add(`assets/${folder}/${id}.webp`).add(`assets/${folder}/${id}.png`);
+}
 // Compare directory entries explicitly: Windows accepts casing that Pages rejects.
 const directories = new Map();
 for (const reference of references) {
@@ -97,6 +102,34 @@ assert.equal(timers.size, 1);
 replaced.onload();
 assert.equal(replaced.src, 'new.png');
 assert.equal(timers.size, 0);
+
+// WebP errors retry the same stage as PNG before falling back to the preview.
+const webpContext = vm.createContext({ HonkaiWebpManifest: { 'character-art': ['1001'], characters: ['1001'] }, document: { addEventListener() {} } });
+vm.runInContext(await read('assets/js/webp-images.js'), webpContext);
+const webpImages = webpContext.HonkaiImages;
+assert.equal(webpImages.toWebp('assets/character-art/1001.png'), 'assets/character-art/1001.webp');
+assert.equal(webpImages.toWebp('assets/character-art/9999.png'), 'assets/character-art/9999.png');
+assert.equal(webpImages.toWebp('assets/images/misha.png'), 'assets/images/misha.png');
+artworkContext.HonkaiImages = webpImages;
+const webpItem = { portrait: 'assets/character-art/1001.webp', image: 'assets/characters/1001.webp', rarity: 5 };
+const webpImage = () => Object.assign(image(), { getAttribute() { return this.src; } });
+const webpFailed = webpImage();
+artwork.setSource(webpFailed, webpItem);
+webpFailed.onerror({ type: 'error' });
+assert.equal(webpFailed.src, 'assets/character-art/1001.png');
+webpFailed.onerror({ type: 'error' });
+assert.equal(webpFailed.src, 'assets/characters/1001.webp');
+webpFailed.onerror({ type: 'error' });
+assert.equal(webpFailed.src, 'assets/characters/1001.png');
+webpFailed.onload();
+assert.equal(webpFailed.dataset.artwork, 'preview');
+assert.equal(timers.size, 0);
+const webpDelayed = webpImage();
+artwork.setSource(webpDelayed, webpItem);
+[...timers.values()][0]();
+assert.equal(webpDelayed.src, 'assets/characters/1001.webp', 'A slow WebP goes straight to the preview stage');
+webpDelayed.onload();
+delete artworkContext.HonkaiImages;
 
 artwork.preload(Array.from({ length: 10 }, () => item));
 assert.equal(preloadCount, 1);

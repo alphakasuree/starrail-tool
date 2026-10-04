@@ -18,10 +18,15 @@
             image.dataset.artwork = 'unavailable';
             message('이미지를 불러오지 못했습니다. 연결을 확인한 뒤 다시 열어 주세요.');
         };
-        const fallback = () => {
+        const fallback = event => {
             if (finished) return;
             clearTimeout(timer);
-            if (preview && !usingPreview) {
+            // WebP 로딩 오류는 같은 단계의 PNG로 한 번 더 시도한다. 시간 초과는 바로 다음 단계로 넘어간다.
+            const png = event?.type === 'error' ? globalThis.HonkaiImages?.pngOf(image.getAttribute('src')) : null;
+            if (png) {
+                image.src = png;
+                timer = setTimeout(fallback, 8000);
+            } else if (preview && !usingPreview) {
                 usingPreview = true;
                 image.dataset.artwork = 'preview';
                 message('미리보기를 불러오는 중입니다…');

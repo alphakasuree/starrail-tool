@@ -109,6 +109,9 @@ const db = [
         const collectionItems = [...characterCatalog, ...lightConeCatalog];
         characterCatalog.forEach(item => { item.portrait = `assets/character-art/${item.id}.png`; });
         lightConeCatalog.forEach(item => { item.portrait = `assets/lightcone-art/${item.id}.png`; });
+        HonkaiImages.applyToCatalog(characterCatalog);
+        HonkaiImages.applyToCatalog(lightConeCatalog);
+        HonkaiImages.applyToCatalog(db);
         db.forEach(item => {
             const entry = item.type === 'character' ? characterCatalog.find(c => c.id === item.id) : lightConesByName.get(item.name);
             if (entry) Object.assign(item, { id: entry.id, portrait: entry.portrait, path: entry.path, pathName: entry.pathName, element: entry.element, elementName: entry.elementName });

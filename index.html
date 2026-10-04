@@ -31,6 +31,8 @@
     <link rel="stylesheet" href="assets/css/accessibility.css">
     <link rel="stylesheet" href="assets/css/viewport-scale.css?v=20261003-native-tools">
     <script src="assets/js/viewport-scale.js?v=20261003-native-tools"></script>
+    <script src="assets/js/webp-manifest.js"></script>
+    <script src="assets/js/webp-images.js"></script>
 </head>
 <body>
     <section id="profile-login-screen" aria-labelledby="profile-login-title">
@@ -80,7 +82,7 @@
             
             <!-- 캐릭터와 광추 픽업에 각각 진입 -->
             <button id="lobby-pickup-character" type="button" data-click-action="ui-0" class="lobby-pickup" aria-label="창해에서 맺은 진주 캐릭터 픽업 입장">
-                <img id="lobby-art-character" src="assets/character-art/1503.png" alt="펄">
+                <img id="lobby-art-character" src="assets/character-art/1503.webp" alt="펄">
                 <div class="lobby-pickup-copy">
                     <small id="lobby-tag-character" class="font-orbitron">캐릭터 이벤트 워프</small>
                     <h2 id="lobby-title-character">창해에서 맺은 진주 ↗</h2>
@@ -88,7 +90,7 @@
                 </div>
             </button>
             <button id="lobby-pickup-lightcone" type="button" data-click-action="ui-1" class="lobby-pickup cone" aria-label="세월의 응고 광추 픽업 입장">
-                <img id="lobby-art-lightcone" src="assets/lightcone-art/23055.png" alt="내일에 바치는 색채">
+                <img id="lobby-art-lightcone" src="assets/lightcone-art/23055.webp" alt="내일에 바치는 색채">
                 <div class="lobby-pickup-copy">
                     <small id="lobby-tag-lightcone" class="font-orbitron">광추 이벤트 워프</small>
                     <h2 id="lobby-title-lightcone">세월의 응고 ↗</h2>
@@ -148,7 +150,7 @@
         </dialog>
         <div class="warp-stage">
             <div class="warp-orbit" aria-hidden="true"></div>
-            <img id="warp-banner-art" class="warp-art" src="assets/character-art/1503.png" alt="펄 캐릭터 일러스트">
+            <img id="warp-banner-art" class="warp-art" src="assets/character-art/1503.webp" alt="펄 캐릭터 일러스트">
             <section class="warp-panel" aria-labelledby="warp-banner-title">
                 <div id="warp-banner-tag" class="warp-tag">캐릭터 이벤트 워프</div>
                 <h1 id="warp-banner-title" class="warp-title">창해에서 맺은 진주</h1>
@@ -284,7 +286,7 @@
             <div class="relic-layout">
                 <form id="relic-form" class="relic-panel" novalidate>
                     <div class="relic-panel-heading"><h2 id="relic-form-heading">세팅 분석</h2><span id="relic-analysis-chip" class="relic-chip">첨부 표 / 4.6V</span></div>
-                    <div class="relic-character"><img id="relic-character-image" src="assets/characters/1503.png" alt="펄"><div><label for="relic-character-search">장착 캐릭터 검색</label><input id="relic-character-search" type="search" placeholder="캐릭터 이름으로 검색" autocomplete="off"><label for="relic-character-select" class="relic-search-select-label">검색 결과에서 선택</label><select id="relic-character-select"></select><p id="relic-character-search-count" class="relic-muted" aria-live="polite"></p><p id="relic-character-meta"></p></div></div>
+                    <div class="relic-character"><img id="relic-character-image" src="assets/characters/1503.webp" alt="펄"><div><label for="relic-character-search">장착 캐릭터 검색</label><input id="relic-character-search" type="search" placeholder="캐릭터 이름으로 검색" autocomplete="off"><label for="relic-character-select" class="relic-search-select-label">검색 결과에서 선택</label><select id="relic-character-select"></select><p id="relic-character-search-count" class="relic-muted" aria-live="polite"></p><p id="relic-character-meta"></p></div></div>
                     <div class="relic-mode-tabs" role="tablist" aria-label="평가 방식"><button type="button" id="relic-mode-build" role="tab" aria-selected="true">준종결 → 종결 비교</button><button type="button" id="relic-mode-item" role="tab" aria-selected="false">유물 한 개 평가</button></div>
                     <details id="relic-reference-card" class="relic-reference-card"><summary>첨부 준종결 표 기준</summary><div id="relic-reference-content"></div></details>
                     <div id="relic-build-inputs"><details class="relic-input-help"><summary>목표 수치 설정 기준</summary><p class="relic-muted">준종결은 첨부 표, 종결은 계산기의 제안값입니다. 공격력·HP·방어력·치명타 피해·격파는 +15%, 치명타 확률은 +5%p(최대 100%)로 제안합니다. 속도·명중·저항과 상한 조건은 유지하므로 조합에 맞게 종결 목표를 직접 조정하세요.</p></details><div class="relic-target-heading"><span>능력치</span><span>현재 수치</span><span>준종결</span><span>종결</span><span>조건</span></div><div id="relic-build-targets"></div><div class="relic-target-add"><select id="relic-target-add-select" aria-label="비교할 능력치 추가"></select><button type="button" id="relic-target-add">목표 추가 +</button></div><button type="button" id="relic-build-example" class="relic-text-button">준종결 목표 예시 입력 ↗</button><p class="relic-muted">전투 수치로 적힌 항목은 해당 버프가 적용된 수치를 입력하세요. ‘최대한’·상대 속도처럼 숫자가 없는 조건은 원문을 확인하고 목표를 추가할 수 있습니다.</p></div>

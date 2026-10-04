@@ -5,7 +5,9 @@ import {createHash} from 'node:crypto';
 export async function generatePwa(root) {
 const files=['index.html','manifest.webmanifest','assets/favicon.svg'];
 for(const dir of ['assets/js','assets/css','assets/characters','assets/lightcones','assets/icons','assets/paths']) {
-    for(const file of await fs.readdir(path.join(root,dir))) if(/\.(js|css|png|svg|webp)$/.test(file)) files.push(`${dir}/${file}`);
+    const names=await fs.readdir(path.join(root,dir));
+    // 같은 이름의 WebP가 있으면 PNG는 오프라인 캐시에서 빼고 대체용으로만 온라인에서 받는다.
+    for(const file of names) if(/\.(js|css|png|svg|webp)$/.test(file)&&!(file.endsWith('.png')&&names.includes(file.replace(/\.png$/,'.webp')))) files.push(`${dir}/${file}`);
 }
 const hash=createHash('sha256');for(const file of files) hash.update(await fs.readFile(path.join(root,file)));
 const revision=hash.digest('hex').slice(0,12);

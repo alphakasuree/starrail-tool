@@ -33,13 +33,15 @@ const context = vm.createContext({setTimeout,clearTimeout,console,
     Image:class {constructor(){this.width=1200;this.height=1800;images.push(this);}set src(value){
         this.source=value;
         if(value.startsWith('assets/lightcones/') || value.startsWith('assets/lightcone-art/') || value.startsWith('assets/spec-icons/')) {
-            images.splice(images.indexOf(this),1);
+            if(images.includes(this)) images.splice(images.indexOf(this),1);
             queueMicrotask(()=>failConeImage && !value.startsWith('assets/spec-icons/') ? this.onerror?.() : this.onload?.());
         }
     }},
     URL:{createObjectURL:()=> 'blob:test',revokeObjectURL(){}},
     addEventListener(type,fn){events.set(type,fn);}
 });
+vm.runInContext(await fs.readFile(new URL('../assets/js/webp-manifest.js',import.meta.url),'utf8'),context);
+vm.runInContext(await fs.readFile(new URL('../assets/js/webp-images.js',import.meta.url),'utf8'),context);
 vm.runInContext(await fs.readFile(new URL('../assets/js/characters.js',import.meta.url),'utf8'),context);
 vm.runInContext(await fs.readFile(new URL('../assets/js/spec-assets.js',import.meta.url),'utf8'),context);
 vm.runInContext(await fs.readFile(new URL('../assets/js/uid-api.js',import.meta.url),'utf8'),context);
@@ -79,9 +81,9 @@ assert.equal(get('spec-card-download').disabled,false);
 assert.equal(get('spec-card-canvas').width / get('spec-card-canvas').height, 1.6, 'Exported PNG must use a landscape 16:10 ratio');
 assert(painted.some(text=>text.includes('3,200')));
 assert(painted.some(text=>text.includes('UID 100000999')));
-assert(drawnImages.includes('assets/character-art/1001.png'),'Character artwork must be painted');
-assert(drawnImages.includes('assets/lightcone-art/23024.png'),'Full light-cone artwork must be painted');
-const coneRect = imageRects.find(rect=>rect.source==='assets/lightcone-art/23024.png');
+assert(drawnImages.includes('assets/character-art/1001.webp'),'Character artwork must be painted');
+assert(drawnImages.includes('assets/lightcone-art/23024.webp'),'Full light-cone artwork must be painted');
+const coneRect = imageRects.find(rect=>rect.source==='assets/lightcone-art/23024.webp');
 assert(Math.abs(coneRect.width/coneRect.height-coneRect.ratio)<1e-9,'Light-cone artwork must retain its original proportions');
 const coneImageWidth = Math.round(Math.min(Math.round((get('spec-card-canvas').width-700)*.36)*.46,360*.7));
 assert(coneRect.x>=684 && coneRect.y>=204 && coneRect.x+coneRect.width<=684+coneImageWidth && coneRect.y+coneRect.height<=564,'Complete light-cone artwork must fit inside the enlarged portrait area without cropping');

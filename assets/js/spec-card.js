@@ -62,7 +62,7 @@
             button.innerHTML = `<span class="spec-character-copy"><strong>${escape(nameOf(c))}</strong><small><span>Lv.${c.level}</span><span>성혼 ${c.rank}</span>${local ? `<span>${escape(local.elementName)}</span>` : ''}</small></span>`;
             if (local) {
                 const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy';
-                WarpArtwork.setSource(img, {portrait:`assets/character-art/${c.id}.png`, image:local.image});
+                WarpArtwork.setSource(img, {portrait:HonkaiImages.toWebp(`assets/character-art/${c.id}.png`), image:local.image});
                 button.prepend(img);
             }
             button.addEventListener('click', () => select(c.id));
@@ -74,7 +74,10 @@
             const img = new Image();
             const timer = setTimeout(() => finish(null), 8000);
             function finish(value) { clearTimeout(timer); img.onload = img.onerror = null; resolve(value); }
-            img.onload = () => finish(img); img.onerror = () => finish(null); img.src = src;
+            let png = globalThis.HonkaiImages?.pngOf(src);
+            img.onload = () => finish(img);
+            img.onerror = () => { if (png) { img.src = png; png = null; } else finish(null); };
+            img.src = src;
         });
     }
     async function select(id) {
@@ -95,8 +98,8 @@
         try {
             const local = localCharacter(c);
             const [art, coneArt, rankIcons, relicIcons, elementIcon, pathIcon] = await Promise.all([
-                local ? loadImage(`assets/character-art/${c.id}.png`).then(img => img || loadImage(local.image)) : null,
-                c.lightCone ? loadImage(`assets/lightcone-art/${c.lightCone.id}.png`).then(img => img || loadImage(`assets/lightcones/${c.lightCone.id}.png`)) : null,
+                local ? loadImage(HonkaiImages.toWebp(`assets/character-art/${c.id}.png`)).then(img => img || loadImage(local.image)) : null,
+                c.lightCone ? loadImage(HonkaiImages.toWebp(`assets/lightcone-art/${c.lightCone.id}.png`)).then(img => img || loadImage(HonkaiImages.toWebp(`assets/lightcones/${c.lightCone.id}.png`))) : null,
                 Promise.all((gameAssets.characters[c.id] || []).map(rank => loadIcon(rank.icon))),
                 Promise.all(c.relics.map(r => loadIcon(relicAsset(r)?.icon))),
                 loadIcon(gameAssets.elements[local?.element]),
