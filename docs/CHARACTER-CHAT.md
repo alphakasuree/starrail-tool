@@ -5,7 +5,7 @@
 ## 무료 설정 및 실제 연결
 
 1. [Google AI Studio](https://aistudio.google.com/api-keys)에서 **결제가 연결되지 않은 Free Tier 프로젝트**를 만들고 Gemini API 키를 발급합니다. 프로젝트의 실제 등급과 사용 가능 모델·한도를 확인합니다. 유료 전환이나 결제 계정 연결을 하지 않습니다.
-2. 기존 UID 중계 서버의 Cloudflare Worker에서 **Settings → Variables and Secrets**에 `GEMINI_API_KEY`를 **Secret**으로 등록합니다. 소스, 브라우저 설정이나 대화창에 키를 넣지 않습니다. 자동 배포는 이 기존 Secret을 유지합니다.
+2. GitHub 저장소 **Settings → Secrets and variables → Actions → Secrets**에 `GEMINI_API_KEY`를 등록하면 자동 배포가 Cloudflare Worker의 Secret으로 전달합니다. 기존 UID 중계 서버의 Cloudflare Worker에서 **Settings → Variables and Secrets**에 직접 Secret으로 등록할 수도 있습니다. GitHub에 키를 등록하지 않은 경우 자동 배포는 기존 Worker Secret을 유지합니다. 소스, 브라우저 설정이나 대화창에 키를 넣지 않습니다.
 3. Google 프로젝트가 Free Tier이며 결제가 연결되지 않았음을 확인한 후 GitHub 저장소 **Settings → Secrets and variables → Actions → Variables**에 `GEMINI_FREE_TIER_CONFIRMED=1`을 추가합니다. 이 값이 없거나 `1`이 아니면 서버는 AI 요청을 보내지 않습니다.
 4. 기존 [UID 배포 안내](UID-LINK.md)에 따라 Cloudflare **Workers Free** 계정으로 GitHub Actions 배포를 실행합니다. 기존 Worker에 SQLite Durable Object `ChatQuota`가 함께 생성되어 사이트 전체의 한도 소진 상태를 보관합니다. 이미 다른 중계 주소를 `UID_API_BASE_URL`로 지정한 경우 해당 서버에도 동일한 챗봇 코드와 설정을 배포해야 합니다.
 5. 공개 사이트에 입장하여 키레네 대화창을 엽니다. 연결은 자동 확인하며 정상 상태의 연결 안내나 확인 버튼은 표시하지 않습니다. 등록되지 않은 키/설정과 한도 소진은 필요한 오류 안내를 표시합니다. 키는 배포된 정적 파일에 포함되지 않습니다.

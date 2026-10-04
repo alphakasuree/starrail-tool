@@ -38,6 +38,9 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.136.3'
           command: deploy --config tmp/uid-deploy/wrangler.json
+          secrets: ${{ secrets.GEMINI_API_KEY != '' && 'GEMINI_API_KEY' || '' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       - name: Verify deployed UID relay
         run: node scripts/verify-uid-deployment.mjs
         env:
