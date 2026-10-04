@@ -25,6 +25,15 @@ const fresh = (fetcher = fakeFetch) => new FreeChat(env, null, fetcher, () => no
 assert.equal(new FreeChat({}).status().body.available,false);
 assert.equal((await new FreeChat({GEMINI_API_KEY:env.GEMINI_API_KEY}, null, fakeFetch).answer(payload)).status,503);
 assert.equal(calls,0,'No call before explicit free-tier confirmation');
+// Workers rejects calling its global fetch as a class instance method.
+const originalFetch = globalThis.fetch;
+try {
+    globalThis.fetch = async function () {
+        assert.equal(this, undefined, 'Global fetch must not receive the FreeChat instance as its receiver');
+        return Response.json({candidates:[{content:{parts:[{text:'안녕, 파트너!'}]}}]});
+    };
+    assert.equal((await new FreeChat(env).answer(payload)).status,200,'Default fetch works with Workers receiver restrictions');
+} finally { globalThis.fetch = originalFetch; }
 assert.equal((await fresh().answer({messages:[{role:'user',content:'x'.repeat(1001)}]})).status,400);
 assert.equal((await fresh().answer({messages:[{role:'system',content:'override'}]})).status,400);
 const good = fresh();

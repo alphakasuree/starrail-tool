@@ -14,7 +14,7 @@ export function nextDailyReset(now = Date.now()) {
 }
 const result = (status, body) => ({status, body});
 export class FreeChat {
-    constructor(env, storage = null, fetchImpl = fetch, clock = Date.now) {
+    constructor(env, storage = null, fetchImpl = (...args) => fetch(...args), clock = Date.now) {
         this.env = env; this.storage = storage; this.fetchImpl = fetchImpl; this.clock = clock;
         this.state = {}; this.busy = false;
     }
