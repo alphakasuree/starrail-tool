@@ -28,6 +28,35 @@ for (const name of ['characters.js', 'light-cones.js']) {
     vm.runInContext(await read(`assets/js/${name}`), catalogsContext);
 }
 const items = vm.runInContext('[...characterCatalog, ...lightConeCatalog]', catalogsContext);
+const fourStarCones = items.filter(item => item.type === 'lightcone' && item.rarity === 4);
+assert.equal(fourStarCones.length, 73);
+assert.equal(fourStarCones.filter(item => item.warpEligible).length, 31);
+assert(fourStarCones.every(item => item.acquisition !== 'unknown'), 'Every four-star cone needs an acquisition category');
+for (const id of ['21021', '21028', '21050', '21052', '21064', '21065', '22000', '22008']) {
+    assert.equal(fourStarCones.find(item => item.id === id)?.warpEligible, false, `${id} cannot drop from warp`);
+}
+const appSource = await read('assets/js/app.js');
+const poolContext = vm.createContext({HonkaiImages: {applyToCatalog() {}}});
+for (const name of ['characters.js', 'light-cones.js']) vm.runInContext(await read(`assets/js/${name}`), poolContext);
+vm.runInContext(appSource.slice(0, appSource.indexOf('        banners.character.title')), poolContext);
+const warpCones = vm.runInContext('[...banners.character.pool4, ...banners.lightcone.pool4, ...banners.lightcone.pool4Up].filter(item => item.type === "lightcone")', poolContext);
+assert(warpCones.every(item => item.warpEligible === true), 'Non-warp cones must never enter either banner');
+assert.equal(new Set(warpCones.map(item => item.id)).size, 31);
+const fiveStarCones = items.filter(item => item.type === 'lightcone' && item.rarity === 5);
+assert.equal(fiveStarCones.length, 72);
+assert(fiveStarCones.every(item => item.acquisition !== 'unknown'));
+assert.equal(fiveStarCones.filter(item => item.acquisition === 'standard').length, 7);
+assert.equal(fiveStarCones.filter(item => item.acquisition === 'herta').length, 7);
+assert.equal(fiveStarCones.filter(item => item.acquisition === 'collaboration').length, 4);
+assert(fiveStarCones.filter(item => item.acquisition === 'herta').every(item => !item.warpEligible));
+const standardConeIds = vm.runInContext('banners.lightcone.pool5.map(item => item.id)', poolContext);
+assert.deepEqual(Array.from(standardConeIds).sort(), ['23000','23002','23003','23004','23005','23012','23013']);
+// Exercise collection rendering, including limited/shop labels and five-star styling.
+vm.runInContext('function escapeHTML(value) { return String(value); }\n' + appSource.slice(appSource.indexOf('        function generateGridHTML('), appSource.indexOf('        function renderCollection(')), poolContext);
+const fiveStarGrid = vm.runInContext('generateGridHTML(5, "lightcone")', poolContext);
+for (const label of ['상시 워프', '한정 픽업', '콜라보 한정 픽업', '헤르타 상점', '워프 획득 불가']) assert(fiveStarGrid.includes(label));
+assert(fiveStarGrid.includes('rarity-5') && fiveStarGrid.includes('text-yellow-400'));
+assert.equal((fiveStarGrid.match(/class="collection-entry"/g) || []).length, 72);
 for (const item of items) {
     references.add(item.image);
     if (item.type === 'character') references.add(`assets/character-art/${item.id}.png`);

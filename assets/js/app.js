@@ -33,38 +33,7 @@ const db = [
             { name: "갤러거", rarity: 4, type: "character", isUp: false, image: "" },
             { name: "맥택", rarity: 4, type: "character", isUp: false, image: "" },
 
-            // [ 4성 광추 ]
-            { name: "수술 후의 대화", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "밤 인사와 잠든 얼굴", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "여생의 첫날", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "침묵만이", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "기억 속 모습", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "두더지파가 환영해", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "「나」의 탄생", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "같은 심정", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "사냥감의 시선", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "랜도의 선택", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "논검", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "행성과의 만남", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "비밀 맹세", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "세상을 진정시키지 마", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "알맞은 타이밍", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "땀방울처럼 빛나는 결심", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "우주 시장 동향", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "팔로우를 부탁해!", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "댄스! 댄스! 댄스!", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "푸른 하늘 아래", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "천재들의 휴식", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "마음에 새긴 약속", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "두 사람의 콘서트", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "끝없는 춤", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "조화가 침묵한 후", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "피어나길 기다리는 꽃", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "그림자처럼 뒤따르는 밤", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "꿈의 몽타주", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "천재들의 안부 인사", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "이야기의 다음 페이지", rarity: 4, type: "lightcone", isUp: false, image: "" },
-            { name: "짧은 휴가", rarity: 4, type: "lightcone", isUp: false, image: "" },
+            // 4성 광추는 도감의 워프 획득 가능 분류에서 가져온다.
 
             // [ 3성 광추 ]
             { name: "화살촉", rarity: 3, type: "lightcone", isUp: false, image: "" },
@@ -96,6 +65,8 @@ const db = [
 
         // 도감 전체 목록은 픽업의 뽑기 대상과 독립적으로 관리한다.
         const lightConesByName = new Map(lightConeCatalog.map(item => [item.name, item]));
+        // Keep warp eligibility and collection labels on the same catalog data.
+        db.push(...lightConeCatalog.filter(item => item.rarity === 4 && item.warpEligible).map(item => ({ ...item, isUp: false })));
         db.forEach(item => {
             if (item.type === 'lightcone') item.image = lightConesByName.get(item.name)?.image || '';
             if (item.type === 'character') {
@@ -117,8 +88,6 @@ const db = [
             if (entry) Object.assign(item, { id: entry.id, portrait: entry.portrait, path: entry.path, pathName: entry.pathName, element: entry.element, elementName: entry.elementName });
         });
 
-        const pool5_up = db.filter(item => item.rarity === 5 && item.isUp);
-        const pool5_std = db.filter(item => item.rarity === 5 && !item.isUp);
         const pool4_up = db.filter(item => item.rarity === 4 && item.isUp);
         const pool4_std = db.filter(item => item.rarity === 4 && !item.isUp);
         const pool3 = db.filter(item => item.rarity === 3);
@@ -129,7 +98,7 @@ const db = [
         const banners = {
             character: { featured: pearl, maxPity: 90, softPity: 73, softStep: .06, base5: .006, base4: .051, rateUp: .5, rateUp4: .5, pool5: ['1003','1004','1101','1104','1107','1209','1211'].map(id=>characterCatalog.find(c=>c.id===id)), pool4Up: pool4_up, pool4: pool4_std },
             lightcone: { featured: pearlCone, maxPity: 80, softPity: 63, softStep: .07, base5: .008, base4: .066, rateUp: .75, rateUp4: .75,
-                pool5: ['23000', '23002', '23003', '23004', '23005', '23012', '23013'].map(id => lightConeCatalog.find(item => item.id === id)),
+                pool5: lightConeCatalog.filter(item => item.rarity === 5 && item.acquisition === 'standard'),
                 pool4Up: coneUp4, pool4: db.filter(item => item.rarity === 4 && !coneUp4.some(cone => cone.name === item.name)) }
         };
         banners.character.title = '창해에서 맺은 진주';
@@ -348,7 +317,7 @@ const db = [
             const choice=pickupChoices[type].find(entry=>entry.id===selectedPickups[type])||pickupChoices[type][0];
             banner.featured=choice.featured;banner.title=choice.title;banner.collaboration=!!choice.collaboration;
             const catalog=type==='character' ? characterCatalog : lightConeCatalog;
-            const chosen4=(choice.up4||[]).map(id=>catalog.find(entry=>entry.id===id)).filter(entry=>entry?.rarity===4);
+            const chosen4=(choice.up4||[]).map(id=>catalog.find(entry=>entry.id===id)).filter(entry=>entry?.rarity===4 && (entry.type !== 'lightcone' || entry.warpEligible));
             banner.pool4Up=choice.collaboration ? [] : (chosen4.length ? chosen4 : (type==='character' ? pool4_up : coneUp4));
             banner.pool4=db.filter(entry=>entry.rarity===4&&!banner.pool4Up.some(up=>up.id===entry.id));
             const picker=document.getElementById('warp-banner-select');
@@ -380,7 +349,7 @@ const db = [
         function createIllustration(item) {
             const content = document.createElement('div');
             content.className = `illustration ${item.type} text-${item.rarity}star`;
-            const detail = item.type === 'character' ? [item.pathName, item.elementName].filter(Boolean).join(' · ') : '광추';
+            const detail = item.type === 'character' ? [item.pathName, item.elementName].filter(Boolean).join(' · ') : item.acquisitionDetail || '광추';
             content.innerHTML = `<img class="illustration-img" alt="${escapeHTML(item.name)} 일러스트"><p class="illustration-loading" role="status"></p><div class="illustration-info"><div class="illustration-stars">${'★'.repeat(item.rarity)}</div><h2>${escapeHTML(item.name)}</h2><p>${escapeHTML(detail)}</p></div>`;
             WarpArtwork.setSource(content.querySelector('img'), item, { status: content.querySelector('.illustration-loading') });
             return content;
@@ -735,6 +704,13 @@ const db = [
             renderCollection();
         }
         function generateGridHTML(rarity, type, filteredItems = collectionItems) {
+            if (rarity >= 4 && type === 'lightcone') {
+                const groups = rarity === 5 ? fiveStarConeAcquisitionGroups : lightConeAcquisitionGroups;
+                return groups.map(group => {
+                    const entries = filteredItems.filter(item => item.type === type && item.rarity === rarity && item.acquisition === group.key);
+                    return entries.length ? `<h3 class="col-acquisition-heading">★${rarity} ${escapeHTML(group.label)} · ${entries.length}종${group.warpEligible ? '' : ' · 워프 획득 불가'}</h3>` + generateConeGrid(entries) : '';
+                }).join('');
+            }
             const items = filteredItems.filter(i => i.rarity === rarity && i.type === type);
             if (items.length === 0) return ''; 
 
@@ -750,6 +726,9 @@ const db = [
                 html += `<article class="collection-entry"><button type="button" class="col-item ${stateClass}" style="${bgStyle}" data-action="collection-item" data-type="${escapeHTML(item.type)}" data-id="${escapeHTML(item.id)}" aria-label="${escapeHTML(item.name)} 일러스트 확대"><div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, transparent 60%); z-index: 3;"></div><div class="col-item-name ${nameColor}">${escapeHTML(item.name)}${detailHTML}</div></button></article>`;
             });
             return html + `</div>`;
+        }
+        function generateConeGrid(items) {
+            return `<div class="col-grid">${items.map(item => `<article class="collection-entry"><button type="button" class="col-item unlocked rarity-${item.rarity}" style="background-image: url('${item.image}'); background-size: cover; background-position: center;" data-action="collection-item" data-type="lightcone" data-id="${escapeHTML(item.id)}" aria-label="${escapeHTML(item.name)} · ${escapeHTML(item.acquisitionDetail)} · 일러스트 확대"><span class="col-acquisition-badge${item.warpEligible ? ' warp' : ''}">${escapeHTML(item.acquisitionBadge)}</span><div class="col-cone-shade"></div><div class="col-item-name ${item.rarity === 5 ? 'text-yellow-400' : 'text-purple-300'}">${escapeHTML(item.name)}</div></button></article>`).join('')}</div>`;
         }
         function renderCollection() {
             const query = document.getElementById('collection-search').value.trim().toLocaleLowerCase();

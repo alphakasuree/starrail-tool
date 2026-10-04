@@ -173,6 +173,10 @@
         button.col-item:focus-visible { outline: 3px solid #70a8d4; outline-offset: 3px; }
         .col-grid-character { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
         .collection-entry { min-width: 0; }
+        .col-acquisition-heading { margin: 0 0 12px; color: #d9c9f3; font-size: 14px; line-height: 1.6; }
+        .col-acquisition-badge { position: absolute; top: 5px; left: 5px; z-index: 5; border: 1px solid #d5b5f7; border-radius: 5px; padding: 3px 5px; background: #30223deb; color: #f0dcff; font-size: 10px; font-weight: 700; }
+        .col-acquisition-badge.warp { border-color: #85d8c7; background: #12382feb; color: #b9f3e6; }
+        .col-cone-shade { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,.9), transparent 60%); z-index: 3; }
         .collection-account { padding: 10px; border: 1px solid #344760; border-radius: 0 0 8px 8px; background: #162339; color: #e7edf7; font-size: 12px; }
         .collection-account > label { display: block; margin-bottom: 8px; }
         .collection-account input, #collection-owned-filter { accent-color: #68d6c4; }

@@ -1361,3 +1361,56 @@ const lightConeCatalog = [
         "image":  "assets/lightcones/24006.png"
     }
 ];
+
+// Explicit acquisition lists: unknown future entries must not enter the warp pool.
+// Sources and maintenance notes: docs/light-cones-README.md.
+const lightConeAcquisitionGroups = [
+    { key: 'warp', label: '워프 획득 가능', warpEligible: true, ids: [
+        '21000','21001','21002','21003','21004','21005','21006','21007','21008','21009',
+        '21010','21011','21012','21013','21014','21015','21016','21017','21018','21019','21020',
+        '21042','21043','21044','21045','21046','21047','21048','21051','21054','21066'
+    ] },
+    { key: 'shop', label: '광추 상점·보상', warpEligible: false, ids: [
+        '21021','21022','21023','21024','21025','21026','21027',
+        '21035','21036','21037','21038','21039','21040','21041','21050','21064'
+    ] },
+    { key: 'battlepass', label: '무명의 공훈', warpEligible: false, ids: [
+        '21028','21029','21030','21031','21032','21033','21034','21052','21053',
+        '21055','21056','21057','21058','21060','21061','21062','21065'
+    ] },
+    { key: 'event', label: '이벤트 보상·교환', warpEligible: false, ids: [
+        '22000','22001','22002','22003','22004','22005','22006','22007','22008'
+    ] }
+];
+for (const item of lightConeCatalog.filter(entry => entry.rarity === 4)) {
+    const group = lightConeAcquisitionGroups.find(entry => entry.ids.includes(item.id));
+    item.acquisition = group?.key || 'unknown';
+    item.acquisitionLabel = group?.label || '획득 경로 확인 중';
+    item.warpEligible = group?.warpEligible === true;
+    item.acquisitionDetail = `${item.acquisitionLabel} · ${item.warpEligible ? '워프 획득 가능' : '워프 획득 불가'}`;
+    item.acquisitionBadge = item.warpEligible ? '워프 가능' : '워프 불가';
+}
+
+const fiveStarConeAcquisitionGroups = [
+    { key: 'standard', label: '상시 워프', badge: '상시', detail: '상시 워프 · 광추 이벤트 워프의 픽업 실패 시 획득 가능', warpEligible: true,
+        ids: ['23000','23002','23003','23004','23005','23012','23013'] },
+    { key: 'limited', label: '한정 픽업', badge: '한정 픽업', detail: '해당 광추 이벤트 워프에서만 획득 · 상시 워프·다른 픽업의 실패 보상에서 획득 불가', warpEligible: true,
+        ids: ['23001','23006','23007','23008','23009','23010','23011',
+            '23014','23015','23016','23017','23018','23019','23020','23021','23022','23023',
+            '23024','23025','23026','23027','23028','23029','23030','23031','23032','23033',
+            '23034','23035','23036','23037','23038','23039','23040','23041','23042','23043',
+            '23044','23047','23048','23049','23050','23051','23052','23053','23054','23055',
+            '23056','23057','23058','23059','23060','23063','23064'] },
+    { key: 'collaboration', label: '콜라보 한정 픽업', badge: '콜라보', detail: '해당 콜라보 광추 워프에서만 획득 · 상시·일반 이벤트 워프에서 획득 불가', warpEligible: true,
+        ids: ['23045','23046','23061','23062'] },
+    { key: 'herta', label: '헤르타 상점', badge: '워프 불가', detail: '헤르타 상점에서 헤르타 채권으로 교환 · 모든 워프에서 획득 불가', warpEligible: false,
+        ids: ['24000','24001','24002','24003','24004','24005','24006'] }
+];
+for (const item of lightConeCatalog.filter(entry => entry.rarity === 5)) {
+    const group = fiveStarConeAcquisitionGroups.find(entry => entry.ids.includes(item.id));
+    item.acquisition = group?.key || 'unknown';
+    item.acquisitionLabel = group?.label || '획득 경로 확인 중';
+    item.acquisitionDetail = group?.detail || item.acquisitionLabel;
+    item.acquisitionBadge = group?.badge || '확인 중';
+    item.warpEligible = group?.warpEligible === true;
+}
