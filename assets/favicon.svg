@@ -1,1 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0b1627"/><path d="M32 10 38 26 54 32 38 38 32 54 26 38 10 32 26 26Z" fill="#91e2d2"/><circle cx="32" cy="32" r="7" fill="#263e63"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>개척성 — 두 개의 궤도</title>
+  <defs>
+    <linearGradient id="rear-trail" x1="80" y1="256" x2="434" y2="210" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#555555"/><stop offset=".5" stop-color="#777777"/><stop offset="1" stop-color="#a6a6a6"/>
+    </linearGradient>
+    <linearGradient id="near-trail" x1="86" y1="286" x2="393" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#777777"/><stop offset=".38" stop-color="#b9b9b9"/><stop offset=".8" stop-color="#eeeeee"/><stop offset="1" stop-color="#f5f5f5"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="#171717"/>
+  <g transform="rotate(55 256 256)" fill="none">
+    <path d="M100 256A156 84 0 0 1 412 256" stroke="#595959" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- A fine, receding arc behind the star; no extruded ring or lit surface. -->
+  <g transform="rotate(-30 256 256)" fill="none">
+    <path d="M80 256A176 79 0 0 1 432 256" stroke="url(#rear-trail)" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+  <path d="M256 140L280 226L334 256L280 281L256 372L232 281L178 256L232 226Z" fill="#eeeeee"/>
+  <g transform="rotate(55 256 256)" fill="none">
+    <path d="M412 256A156 84 0 0 1 112 288" stroke="#171717" stroke-width="10" stroke-linecap="round"/>
+    <path d="M412 256A156 84 0 0 1 112 288" stroke="#858585" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- The brighter foreground sweep ends at a small orbiting satellite. -->
+  <g transform="rotate(-30 256 256)" fill="none">
+    <path d="M80 256A176 79 0 0 0 393 306" stroke="#171717" stroke-width="14" stroke-linecap="round"/>
+    <path d="M80 256A176 79 0 0 0 393 306" stroke="url(#near-trail)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="405" cy="298" r="6.5" fill="#f5f5f5"/>
+  </g>
+</svg>

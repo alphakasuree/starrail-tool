@@ -119,6 +119,8 @@
     const models=createModels(characterCatalog,relicBuildReference,teamSynergyData);
     const mains=models.filter(c=>c.roles.includes('main'));
     let currentTeams=[],savedTeams=[],previousFocus=null;
+    let selectedParty=-1, draft={ids:[null,null,null,null],name:'',note:''}, dirty=false, pickerSlot=-1;
+    let pendingParty=null, discardFocus=null;
     const owned=()=>globalThis.HonkaiAccount?.owned() || new Set();
     function fillMains() {
         const normalize=v=>v.toLocaleLowerCase().replace(/[\s.•·()]/g,'');
@@ -154,18 +156,122 @@
         currentTeams.forEach((team,i)=>get(`team-save-${i}`).addEventListener('click',()=>saveTeam(team)));
     }
     function renderSaved() {
-        get('team-saved').innerHTML=savedTeams.length ? savedTeams.map((s,i)=>`<button type="button" id="team-saved-${i}"><strong>${escape(s.ids.map(id=>models.find(c=>c.id===id)?.name || '').join(' / '))}</strong><small>${escape(new Date(s.savedAt).toLocaleString('ko-KR'))} · 눌러서 보기</small></button>`).join('') : '<p class="team-muted">저장한 파티가 없습니다.</p>';
-        savedTeams.forEach((s,i)=>get(`team-saved-${i}`).addEventListener('click',()=>{
-            get('team-search').value='';get('team-owned-only').checked=s.ownedOnly;get('team-four-star').checked=s.fourStarOnly;get('team-acheron-e2').checked=s.acheronE2;get('team-offensive').checked=s.offensive;
-            fillMains();get('team-main').value=s.ids[0];render();
-            get('team-saved-preview').innerHTML=`<h3>저장한 파티</h3><div class="team-members">${s.ids.map((id,j)=>memberCard(models.find(c=>c.id===id),j)).join('')}</div><p class="team-muted">저장 당시 편성입니다. 위 추천은 현재 보유 상태와 필터로 다시 계산했습니다.</p>`;
-            get('team-status').textContent='저장한 파티를 불러왔습니다.';
+        get('team-saved').innerHTML=savedTeams.length ? savedTeams.map((s,i)=>`<button type="button" id="team-saved-${i}"><strong>${escape(partyName(s,i))}</strong><small>자유 편성에서 열기 →</small></button>`).join('') : '<p class="team-muted">저장한 파티가 없습니다.</p>';
+        savedTeams.forEach((s,i)=>get(`team-saved-${i}`).addEventListener('click',()=>selectParty(i)));
+        renderPartyList();
+    }
+    function partyName(party,index) {return party.name || party.ids.map(id=>models.find(c=>c.id===id)?.name).filter(Boolean).join(' / ') || `파티 ${index+1}`;}
+    function setMode(free) {
+        get('team-free-workspace').hidden=!free;get('team-recommend-workspace').hidden=free;
+        get('team-mode-free').setAttribute('aria-pressed',String(free));get('team-mode-recommend').setAttribute('aria-pressed',String(!free));
+    }
+    function markDirty() {dirty=true;get('party-dirty').textContent='저장하지 않은 변경사항';get('party-status').textContent='';}
+    function closePicker(focus=true) {
+        const slot=pickerSlot;pickerSlot=-1;get('party-picker').hidden=true;
+        if(focus && slot>=0) get(`party-slot-${slot}`)?.focus();
+    }
+    function selectParty(index,check=true) {
+        if(check && dirty) {
+            pendingParty=index;discardFocus=document.activeElement;
+            get('party-delete-confirmation').hidden=true;
+            setMode(true);get('party-discard-confirmation').hidden=false;get('party-discard-cancel').focus();
+            return;
+        }
+        pendingParty=null;discardFocus=null;get('party-discard-confirmation').hidden=true;
+        get('party-delete-confirmation').hidden=true;
+        selectedParty=index;
+        const party=savedTeams[index];
+        draft=party ? {ids:party.ids.slice(),name:party.name || '',note:party.note || ''} : {ids:[null,null,null,null],name:'',note:''};
+        dirty=false;closePicker(false);setMode(true);renderPartyEditor();renderPartyList();
+        get('party-status').textContent='';get('party-name').focus();
+    }
+    function renderPartyList() {
+        get('party-count').textContent=String(savedTeams.length);
+        get('party-list').innerHTML=savedTeams.length ? savedTeams.map((party,i)=>`<button type="button" id="party-card-${i}" class="party-card" aria-pressed="${selectedParty===i}"><strong>${escape(partyName(party,i))}</strong><span class="party-thumbnails">${party.ids.map(id=>{const c=models.find(c=>c.id===id);return c ? `<img src="${escape(c.image)}" alt="${escape(c.name)}" loading="lazy">` : '<span aria-label="빈 슬롯">＋</span>';}).join('')}</span><small>${party.ids.filter(Boolean).length}/4명 · ${escape(new Date(party.savedAt).toLocaleDateString('ko-KR'))}</small></button>`).join('') : '<div class="party-empty"><span>＋</span><p>아직 저장한 파티가 없어요.</p><small>네 개의 슬롯에서 첫 조합을 만들어보세요.</small></div>';
+        savedTeams.forEach((party,i)=>get(`party-card-${i}`).addEventListener('click',()=>selectParty(i)));
+    }
+    function renderPartySlots() {
+        get('party-slots').innerHTML=draft.ids.map((id,i)=>{
+            const c=models.find(c=>c.id===id);
+            return `<div class="party-slot"><button id="party-slot-${i}" type="button" class="party-slot-select" aria-label="${i+1}번 슬롯 ${c ? escape(c.name)+' 교체' : '캐릭터 선택'}"><small>SLOT 0${i+1}</small>${c ? `<img src="${escape(c.image)}" alt=""><strong>${escape(c.name)}</strong><span>${escape(c.pathName)} · ${escape(c.elementName)}</span>` : `<span class="party-slot-plus">＋</span><strong>${id ? '미등록 캐릭터' : '캐릭터 선택'}</strong><span>${id ? escape(id) : '자유롭게 편성하세요'}</span>`}</button>${id ? `<button id="party-remove-${i}" type="button" class="party-slot-remove" aria-label="${i+1}번 슬롯 캐릭터 제거">제거</button>` : ''}</div>`;
+        }).join('');
+        draft.ids.forEach((id,i)=>{
+            get(`party-slot-${i}`).addEventListener('click',()=>{pickerSlot=i;get('party-picker').hidden=false;get('party-picker-heading').textContent=`${i+1}번 슬롯 · 캐릭터 선택`;get('party-search').value='';renderCandidates();get('party-search').focus();});
+            if(id) get(`party-remove-${i}`).addEventListener('click',()=>{draft.ids[i]=null;markDirty();renderPartySlots();if(pickerSlot>=0) renderCandidates();get(`party-slot-${i}`).focus();});
+        });
+    }
+    function renderPartyEditor() {
+        get('party-editor-heading').textContent=selectedParty<0 ? '새 파티' : partyName(savedTeams[selectedParty],selectedParty);
+        get('party-name').value=draft.name;get('party-note').value=draft.note;
+        get('party-dirty').textContent='';get('party-copy').disabled=selectedParty<0;get('party-delete').disabled=selectedParty<0;
+        renderPartySlots();
+    }
+    function renderCandidates() {
+        const normalize=value=>value.toLocaleLowerCase().replace(/[\s.•·()]/g,'');
+        const query=normalize(get('party-search').value);
+        const matches=models.filter(c=>(!get('party-owned').checked || owned().has(c.id)) && normalize(`${c.name} ${c.pathName} ${c.elementName} ${['1001','1224'].includes(c.id) ? '삼칠이' : ''}`).includes(query));
+        get('party-search-count').textContent=`${matches.length}명 · 다른 슬롯에 편성된 캐릭터는 선택할 수 없습니다.`;
+        get('party-candidates').innerHTML=matches.length ? matches.map(c=>{
+            const duplicate=draft.ids.some((id,i)=>i!==pickerSlot && id===c.id);
+            return `<button type="button" id="party-choice-${c.id}" ${duplicate ? 'disabled' : ''} aria-pressed="${draft.ids[pickerSlot]===c.id}"><img src="${escape(c.image)}" alt="" loading="lazy"><strong>${escape(c.name)}</strong><small>${duplicate ? '편성 중' : escape(c.elementName+' · '+c.pathName)}</small></button>`;
+        }).join('') : '<p class="team-muted">검색 결과가 없습니다. 검색어나 보유 필터를 바꿔보세요.</p>';
+        matches.forEach(c=>get(`party-choice-${c.id}`).addEventListener('click',()=>{
+            if(pickerSlot<0 || draft.ids.some((id,i)=>i!==pickerSlot && id===c.id)) return;
+            draft.ids[pickerSlot]=c.id;markDirty();renderPartySlots();closePicker();
         }));
     }
+    function persistParties(next) {
+        if(!HonkaiProfileStorage.id) {get('party-status').textContent='프로필에 접속한 뒤 저장하세요.';return false;}
+        try {HonkaiProfileStorage.setItem('teams',JSON.stringify(next));savedTeams=next;return true;}
+        catch(error) {get('party-status').textContent=`파티를 저장하지 못했습니다. ${error.message}`;return false;}
+    }
+    get('team-mode-free').addEventListener('click',()=>setMode(true));
+    get('team-mode-recommend').addEventListener('click',()=>setMode(false));
+    get('party-new').addEventListener('click',()=>selectParty(-1));
+    function cancelDiscard() {
+        pendingParty=null;get('party-discard-confirmation').hidden=true;
+        discardFocus?.focus();discardFocus=null;
+    }
+    get('party-discard-cancel').addEventListener('click',cancelDiscard);
+    get('party-discard-confirm').addEventListener('click',()=>{
+        if(pendingParty===null || get('party-discard-confirmation').hidden) return;
+        selectParty(pendingParty,false);
+    });
+    get('party-picker-close').addEventListener('click',()=>closePicker());
+    get('party-search').addEventListener('input',renderCandidates);
+    get('party-owned').addEventListener('change',renderCandidates);
+    ['party-name','party-note'].forEach(id=>get(id).addEventListener('input',()=>{draft.name=get('party-name').value;draft.note=get('party-note').value;markDirty();}));
+    get('party-form').addEventListener('submit',event=>{
+        event.preventDefault();
+        const record={...(savedTeams[selectedParty] || {}),mode:'free',ids:draft.ids.slice(),name:draft.name.trim().slice(0,60) || `파티 ${selectedParty<0 ? savedTeams.length+1 : selectedParty+1}`,note:draft.note.slice(0,1000),savedAt:Date.now()};
+        const index=selectedParty<0 ? savedTeams.length : selectedParty;
+        const next=savedTeams.slice();next[index]=record;
+        if(persistParties(next)) {selectParty(index,false);renderSaved();get('party-status').textContent='파티를 저장했습니다.';}
+    });
+    get('party-copy').addEventListener('click',()=>{
+        if(selectedParty<0) return;
+        const record={...savedTeams[selectedParty],mode:'free',ids:draft.ids.slice(),name:`${draft.name.trim() || partyName(savedTeams[selectedParty],selectedParty)} 복사본`.slice(0,60),note:draft.note.slice(0,1000),savedAt:Date.now()};
+        const index=savedTeams.length;
+        if(persistParties([...savedTeams,record])) {selectParty(index,false);renderSaved();get('party-status').textContent='현재 편성을 복제해 새 파티로 저장했습니다.';}
+    });
+    get('party-delete').addEventListener('click',()=>{
+        if(selectedParty<0) return;
+        pendingParty=null;discardFocus=null;get('party-discard-confirmation').hidden=true;
+        get('party-delete-message').textContent=`‘${partyName(savedTeams[selectedParty],selectedParty)}’ 파티가 삭제됩니다. 삭제한 파티는 되돌릴 수 없습니다.`;
+        get('party-delete-confirmation').hidden=false;
+        get('party-delete-cancel').focus();
+    });
+    function cancelDelete() {get('party-delete-confirmation').hidden=true;get('party-delete').focus();}
+    get('party-delete-cancel').addEventListener('click',cancelDelete);
+    get('party-delete-confirm').addEventListener('click',()=>{
+        if(selectedParty<0 || get('party-delete-confirmation').hidden) return;
+        const next=savedTeams.filter((party,i)=>i!==selectedParty);
+        if(persistParties(next)) {selectParty(-1,false);renderSaved();get('party-status').textContent='파티를 삭제했습니다.';}
+    });
     async function saveTeam(team) {
         if(!HonkaiProfileStorage.id) return;
         const record={ids:team.members.map(c=>c.id),savedAt:Date.now(),ownedOnly:get('team-owned-only').checked,fourStarOnly:get('team-four-star').checked,acheronE2:get('team-acheron-e2').checked,offensive:get('team-offensive').checked};
-        const next=[...savedTeams.filter(s=>s.ids.join(':')!==record.ids.join(':')),record];
+        const next=[...savedTeams,record];
         try {await HonkaiProfileStorage.setItem('teams',JSON.stringify(next));savedTeams=next;renderSaved();get('team-status').textContent=`${HonkaiProfileStorage.id} 아이디에 파티를 저장했습니다. 이 브라우저에 보관됩니다.`;}
         catch (error) {get('team-status').textContent=`파티를 저장하지 못했습니다. ${error.message}`;}
     }
@@ -174,21 +280,22 @@
         try {
             const stored=JSON.parse(HonkaiProfileStorage.getItem('teams') || '[]');
             if(!Array.isArray(stored)) throw new Error();
-            savedTeams=stored.filter(s=>s && Array.isArray(s.ids) && s.ids.length===4 && s.ids.every(id=>models.some(c=>c.id===id)) && new Set(s.ids.map(id=>models.find(c=>c.id===id).entityId)).size===4 && mains.some(c=>c.id===s.ids[0]) && Number.isFinite(s.savedAt)).map(s=>({...s,ownedOnly:!!s.ownedOnly,fourStarOnly:!!s.fourStarOnly,acheronE2:!!s.acheronE2,offensive:!!s.offensive}));
+            savedTeams=stored.filter(s=>s && Array.isArray(s.ids) && s.ids.length===4 && s.ids.every(id=>s.mode==='free' && id===null || typeof id==='string' && id.length>0) && new Set(s.ids.filter(Boolean)).size===s.ids.filter(Boolean).length && Number.isFinite(s.savedAt)).map(s=>({...s,...(s.name===undefined ? {} : {name:typeof s.name==='string' ? s.name.slice(0,60) : ''}),...(s.note===undefined ? {} : {note:typeof s.note==='string' ? s.note.slice(0,1000) : ''})}));
             get('team-status').textContent='';
         } catch {get('team-status').textContent='저장한 파티 데이터를 읽을 수 없습니다.';}
-        renderSaved();
+        selectParty(-1,false);renderSaved();
     }));
     get('team-search').addEventListener('input',()=>{get('team-saved-preview').innerHTML='';fillMains();});
     ['team-main','team-owned-only','team-four-star','team-acheron-e2','team-offensive'].forEach(id=>get(id).addEventListener('change',()=>{get('team-saved-preview').innerHTML='';render();}));
-    fillMains();get('team-main').value='1310';render();renderSaved();
-    globalThis.addEventListener('honkai-account-changed',render);
+    fillMains();get('team-main').value='1310';render();renderSaved();renderPartyEditor();
+    globalThis.addEventListener('honkai-account-changed',()=>{render();if(pickerSlot>=0) renderCandidates();});
     globalThis.openTeamBuilder=()=>{
         if(isWarping || !HonkaiProfileStorage.id) return;
         previousFocus=document.activeElement;
-        get('lobby-screen').style.display='none';get('team-screen').hidden=false;get('team-screen').scrollTop=0;render();get('team-search').focus();
+        get('lobby-screen').style.display='none';get('team-screen').hidden=false;get('team-screen').scrollTop=0;setMode(true);render();get('party-new').focus();
     };
     globalThis.closeTeamBuilder=()=>{get('team-screen').hidden=true;get('lobby-screen').style.display='flex';get('lobby-screen').style.opacity='1';previousFocus?.focus();};
     get('team-back').addEventListener('click',globalThis.closeTeamBuilder);
-    document.addEventListener('keydown',e=>{if(e.key==='Escape' && !get('team-screen').hidden) globalThis.closeTeamBuilder();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape' && !get('team-screen').hidden) {if(!get('party-discard-confirmation').hidden) {e.preventDefault();cancelDiscard();} else if(!get('party-delete-confirmation').hidden) {e.preventDefault();cancelDelete();} else if(pickerSlot>=0) {e.preventDefault();closePicker();} else globalThis.closeTeamBuilder();}});
+    globalThis.addEventListener('beforeunload',event=>{if(dirty) {event.preventDefault();event.returnValue='';}});
 })();

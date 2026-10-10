@@ -1,0 +1,259 @@
+/* Shared terminal surfaces. Scene layout, hidden states and rarity colors stay owned by their components. */
+:root {
+    --terminal-bg: #465256;
+    --terminal-surface: #515f63;
+    --terminal-accent: #b0ddce;
+    --terminal-action: #a9d8c7;
+    --terminal-action-hover: #bce6d6;
+    --terminal-ink: #f0f2ed;
+    --terminal-secondary: #d0d9d5;
+    --terminal-border: #e0e9e22e;
+    --terminal-inset: color-mix(in srgb, var(--terminal-bg) 78%, #172024);
+    --terminal-selected: color-mix(in srgb, var(--terminal-bg) 84%, var(--terminal-accent));
+}
+
+/* Native tool pages and top-layer dialogs inherit the selected event character. */
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #character-chat, #profile-login-screen) {
+    background: var(--terminal-bg);
+    color: var(--terminal-ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    color-scheme: dark;
+    scrollbar-color: var(--terminal-accent) transparent;
+}
+:is(#team-screen, #relic-screen, #prep-screen) :is(.team-header, .relic-header, .prep-header) {
+    border-bottom: 1px solid var(--terminal-border);
+    padding-bottom: 20px;
+}
+:is(#team-screen, #relic-screen, #prep-screen) :is(h1, .team-intro h1, .relic-intro h1) {
+    font-weight: 700;
+    letter-spacing: -.045em;
+}
+:is(#team-screen, #relic-screen, #prep-screen) :is(.team-intro h1 span, .relic-intro h1 span,
+    .relic-eyebrow, .prep-eyebrow, .prep-header > span, .team-header > span) { color: var(--terminal-accent); }
+
+/* Flat, lightly outlined panels replace the old per-tool gradients. */
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog, #warp-details, #collection-modal) :is(
+    .team-controls, .team-recommendation, .party-editor, .party-library, .party-picker,
+    .relic-panel, .relic-workspace-card, .prep-panel, .tool-card, .save-card,
+    .account-character, .collection-account, .warp-details-box, .collection-box,
+    .spec-profile-bar, #spec-card-preview, #team-saved-preview) {
+    background: var(--terminal-surface);
+    border: 1px solid var(--terminal-border);
+    border-radius: 8px;
+    box-shadow: none;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog) :is(
+    .team-member, .party-card, .party-slot, .relic-compare-slot, .tool-metric,
+    .prep-metrics > div, .prep-goal, .prep-state, .relic-reference-card,
+    .team-evidence, .team-main-info p span, .relic-workspace-nav) {
+    background: var(--terminal-inset);
+    border-color: var(--terminal-border);
+    border-radius: 6px;
+    box-shadow: none;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog) :is(
+    p.team-muted, .team-intro p, .team-reasons p, .team-source-links small,
+    .team-main-info small, .team-member span, .team-member b:not(.owned),
+    .team-method, .team-recommendation header > span, .team-evidence,
+    .party-editor label, .party-slot-select > span, .party-card small, .party-empty,
+    .relic-muted, .relic-intro > p:last-child, .relic-method, .relic-input-help,
+    .relic-target-heading, .relic-result-message, #relic-reference-content p,
+    .prep-muted, .prep-method p, .prep-metrics small, .prep-check small,
+    .prep-goal-header small, .prep-table td small, .save-muted,
+    .tool-card p, .tool-metric small, .account-character small,
+    .spec-gallery-hint, #spec-card-updated, #spec-card-status, .spec-text-details) {
+    color: var(--terminal-secondary);
+}
+:is(#team-screen, #relic-screen, #prep-screen) :is(
+    .team-recommendation header small, .team-recommendation header b,
+    .team-member small, .team-reasons small, .team-saved-heading,
+    .prep-hero, .prep-metrics strong, .prep-goal-footer strong, .prep-sim-row strong,
+    .relic-score-number, .relic-score-grade, .tool-metric strong) { color: var(--terminal-accent); }
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog) :is(
+    label, .team-controls > label, .team-reasons strong, #relic-reference-content strong,
+    .prep-panel label, #spec-card-summary) { color: var(--terminal-ink); }
+
+/* Inputs retain their component sizing and touch targets. */
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog,
+    #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    :is(input:not([type=checkbox]):not([type=radio]), select, textarea) {
+    background: var(--terminal-inset);
+    border: 1px solid var(--terminal-border);
+    border-radius: 6px;
+    color: var(--terminal-ink);
+    box-shadow: none;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog,
+    #profile-login-screen, #character-chat) :is(input[type=checkbox], input[type=radio]) { accent-color: var(--terminal-accent); }
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog,
+    #warp-details, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat, #warp-screen) :focus-visible {
+    outline: 2px solid var(--terminal-accent);
+    outline-offset: 3px;
+}
+
+/* A consistent quiet button; color is reserved for selection and main actions. */
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog,
+    #warp-details, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat) button {
+    background: var(--terminal-inset);
+    border-color: var(--terminal-border);
+    color: var(--terminal-ink);
+    border-radius: 6px;
+    box-shadow: none;
+    text-shadow: none;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog,
+    #warp-details, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat) button:not(:disabled):hover {
+    border-color: var(--terminal-accent);
+    box-shadow: none;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #spec-card-dialog,
+    #warp-details, #warp-banner-dialog, #collection-modal, #profile-login-screen) :is(
+    button[aria-selected=true], button[aria-pressed=true], .tab-btn.active, .warp-banner-card.selected) {
+    background: var(--terminal-selected);
+    border-color: var(--terminal-accent);
+    color: var(--terminal-ink);
+    box-shadow: inset 0 -2px var(--terminal-accent);
+}
+:is(#team-screen, #relic-screen, #prep-screen, #save-dialog, #spec-card-dialog, #profile-login-screen, #character-chat) :is(
+    .party-primary, .relic-analyze, .relic-tool-primary, .prep-primary, .save-primary,
+    #spec-card-download, #profile-submit, #chat-send) {
+    background: var(--terminal-action);
+    border-color: transparent;
+    color: #1e272b;
+    font-weight: 700;
+    border-radius: 2px 8px 2px 8px;
+    box-shadow: none;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #save-dialog, #spec-card-dialog, #profile-login-screen, #character-chat) :is(
+    .party-primary, .relic-analyze, .relic-tool-primary, .prep-primary, .save-primary,
+    #spec-card-download, #profile-submit, #chat-send):not(:disabled):hover { background: var(--terminal-action-hover); }
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog, #warp-details) :is(
+    .team-header button, .relic-back, .prep-header button, .relic-text-button) {
+    background: transparent; border-color: transparent; color: var(--terminal-secondary);
+}
+/* Destructive actions and evaluation colors retain a meaningful distinction. */
+#team-screen #party-delete, #relic-screen #relic-delete, #save-dialog #save-delete-profile {
+    color: #ffd8df; border-color: #f1a5b855; background: #643943;
+}
+#team-screen .team-notes { background: #5d4d31; border-color: #d4bd7959; }
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog) :is(table th, table td) { border-color: var(--terminal-border); }
+:is(#relic-screen, #prep-screen, #account-dialog) :is(table th, .tool-table th) {
+    background: var(--terminal-inset); color: var(--terminal-secondary);
+}
+#prep-screen .prep-bar { background: var(--terminal-inset); }
+#prep-screen .prep-bar span { background: var(--terminal-accent); }
+#relic-screen .relic-score-ring > div { background: var(--terminal-inset); }
+#relic-screen .relic-score-ring { box-shadow: none; }
+#relic-screen .relic-score-ring p { color: var(--terminal-secondary); }
+#relic-screen .relic-chip { color: var(--terminal-accent); border-color: var(--terminal-border); }
+
+/* Dialog shells use the same surfaces, including the gallery around the PNG canvas. */
+:is(#account-dialog, #save-dialog, #spec-card-dialog, #warp-banner-dialog, #character-chat) {
+    border: 1px solid var(--terminal-border); border-radius: 10px;
+    box-shadow: 0 24px 80px #0e171b40;
+}
+#spec-card-dialog {
+    padding: 20px;
+    background: color-mix(in srgb,var(--terminal-bg) 16%,transparent);
+    border-color: #ffffff1a;
+    box-shadow: none;
+}
+:is(#account-dialog, #save-dialog, #spec-card-dialog, #warp-banner-dialog, #character-chat)::backdrop {
+    background: #10191fc4; backdrop-filter: blur(6px);
+}
+#spec-card-dialog::backdrop { background: #10191f80; }
+#spec-card-dialog .spec-character {
+    background: color-mix(in srgb,var(--terminal-inset) 28%,transparent);
+    border-color: var(--terminal-border); border-radius: 6px;
+}
+#spec-card-dialog .spec-character-copy {
+    background: linear-gradient(transparent, #10191f80 65%, #10191fb3);
+}
+#spec-card-dialog .spec-character[aria-pressed=true]::after { background: var(--terminal-action); color: #1e272b; }
+#spec-card-dialog .spec-eyebrow { color: var(--terminal-accent); }
+#spec-card-dialog :is(.spec-profile-bar, #spec-card-preview) {
+    border-color: var(--terminal-border);
+    background: color-mix(in srgb,var(--terminal-inset) 35%,transparent);
+    box-shadow: none;
+}
+#collection-modal, #warp-details { background: #10191fc4; }
+#collection-modal .collection-box > .bg-gray-900 { background: var(--terminal-surface); border-color: var(--terminal-border); }
+#collection-modal :is(.collection-tools, .rarity-header) { border-color: var(--terminal-border); }
+#collection-modal :is(.collection-count, .collection-empty, .collection-help) { color: var(--terminal-secondary); }
+#collection-modal .rarity-header { text-shadow: none; }
+#collection-modal .col-item.rarity-5 { border-color: var(--c-5star); }
+#collection-modal .col-item.rarity-4 { border-color: var(--c-4star); }
+#collection-modal .col-item.rarity-3 { border-color: var(--c-3star); }
+#warp-details :is(.warp-details-header, .warp-details-tabs, .warp-details-table th, .warp-details-table td) { border-color: var(--terminal-border); }
+#warp-details :is(.warp-details-table th, .warp-details-note, .warp-history-time) { color: var(--terminal-secondary); }
+#warp-banner-dialog :is(.warp-banner-count, .warp-banner-search-label) { color: var(--terminal-secondary); }
+#warp-banner-dialog .warp-banner-choice-art { background: var(--terminal-inset); border-radius: 4px; }
+#warp-banner-dialog .warp-banner-choice small { color: var(--terminal-secondary); }
+#warp-banner-dialog .warp-banner-choice-art span { color: #1e272b; background: var(--terminal-action); }
+
+/* Warp retains its character composition; the UI adopts the lobby's visual language. */
+#warp-screen { background: var(--terminal-bg); color: var(--terminal-ink); }
+#warp-screen :is(.warp-header, .warp-banner-picker, .warp-footer) {
+    background: var(--terminal-bg); color: var(--terminal-ink); border-color: var(--terminal-border);
+}
+#warp-screen .warp-stage { background: var(--terminal-bg); }
+#warp-screen .warp-stage::before, #warp-screen .warp-panel::before { content: none; }
+#warp-screen .warp-orbit { display: none; }
+#warp-screen .warp-panel {
+    background: color-mix(in srgb,var(--terminal-bg) 96%,transparent); color: var(--terminal-ink);
+    border-radius: 0 12px 0 0; border-right: 1px solid var(--terminal-border); box-shadow: none;
+}
+#warp-screen .warp-title { font-weight: 700; }
+#warp-screen .warp-tag { background: var(--terminal-inset); color: var(--terminal-accent); border-radius: 0 4px 4px 0; box-shadow: none; }
+#warp-screen :is(.warp-rate, .warp-guaranteed) { color: var(--terminal-accent); }
+#warp-screen :is(.warp-panel-note, .warp-pity-item, .warp-heading, .warp-character-path, #warp-banner-picker-label) { color: var(--terminal-secondary); text-shadow: none; }
+#warp-screen .warp-pity-item strong { color: var(--terminal-ink); }
+#warp-screen :is(.warp-details-button, .banner-tab, .warp-banner-current) {
+    background: var(--terminal-inset); color: var(--terminal-ink); border: 1px solid var(--terminal-border); border-radius: 6px; box-shadow: none;
+}
+#warp-screen .banner-tab[aria-selected=true] { color: var(--terminal-accent); border-color: var(--terminal-accent); background: var(--terminal-selected); }
+#warp-screen .warp-character-name { background: var(--terminal-inset); border-color: var(--terminal-accent); }
+#warp-screen .warp-character-stars { background: var(--terminal-inset); }
+#warp-screen .warp-portrait { background: var(--terminal-surface); border-color: var(--terminal-border); border-radius: 6px; box-shadow: none; }
+#warp-screen .warp-pull {
+    background: var(--terminal-surface); color: var(--terminal-ink); border: 1px solid var(--terminal-border); border-radius: 2px 8px 2px 8px; box-shadow: none;
+}
+#warp-screen .warp-pull.ten { background: var(--terminal-action); color: #1e272b; border-color: transparent; }
+#warp-screen .warp-pull.ten:hover { background: var(--terminal-action-hover); }
+#warp-screen .warp-pull small { color: inherit; opacity: .8; }
+#warp-screen .warp-banner-current small { color: var(--terminal-secondary); }
+#result-screen { background: var(--terminal-bg); }
+#result-screen > h2 { font-family: 'Noto Sans KR', sans-serif; letter-spacing: .04em; font-weight: 700; text-shadow: none; }
+#result-screen > button { background: var(--terminal-action); color: #1e272b; border: 0; border-radius: 2px 8px 2px 8px; box-shadow: none; }
+#art-viewer { background: var(--terminal-bg); }
+
+/* Entry and conversation use the same shell without changing their flows. */
+#profile-login-screen::before { content: none; }
+#profile-login-screen .profile-login-card {
+    background: var(--terminal-surface); border: 1px solid var(--terminal-border); border-radius: 10px; box-shadow: 0 20px 60px #10191f26;
+}
+#profile-login-screen .profile-login-card h1 { color: var(--terminal-ink); font-weight: 700; }
+#profile-login-screen .profile-login-card > .font-orbitron { font-family: 'Noto Sans KR', sans-serif; color: var(--terminal-ink); }
+#profile-login-screen :is(.profile-login-card p, #profile-login-input-help, .profile-lookup-info summary) { color: var(--terminal-secondary); }
+#profile-login-screen #profile-login-error { color: #ffbdc9; }
+#profile-login-screen .profile-lookup-info { border-color: var(--terminal-border); }
+#profile-login-screen .profile-mode-button span { color: inherit; }
+#chat-open { background: var(--terminal-inset); border-color: var(--terminal-border); color: var(--terminal-ink); box-shadow: 0 8px 24px #10191f30; }
+#character-chat .chat-header { background: var(--terminal-surface); border-color: var(--terminal-border); }
+#character-chat :is(.chat-subtitle, .chat-message small, #chat-status, .chat-note) { color: var(--terminal-secondary); }
+#character-chat .chat-message p { background: var(--terminal-surface); color: var(--terminal-ink); border-radius: 3px 10px 10px; }
+#character-chat .chat-user p { background: var(--terminal-selected); border-radius: 10px 3px 10px 10px; }
+#character-chat .chat-dot { background: var(--terminal-accent); }
+#character-chat #chat-form { border-color: var(--terminal-border); }
+/* Higher-specificity component input rules also use the shared tokens. */
+:is(#relic-screen, #prep-screen, #account-dialog) :is(#relic-form, .tool-card)
+    :is(input:not([type=checkbox]):not([type=radio]), select, textarea) {
+    background: var(--terminal-inset); border-color: var(--terminal-border); color: var(--terminal-ink);
+}
+#team-screen :is(.party-eyebrow, .party-slot-select > small, .party-slot-plus, .party-empty > span, #party-count) { color: var(--terminal-accent); }
+#team-screen .party-thumbnails > span { background: var(--terminal-inset); color: var(--terminal-secondary); }
+@media (max-width: 600px) {
+    #spec-card-dialog { padding: 12px; }
+    #warp-screen .warp-panel { border-radius: 8px 8px 0 0; border-right: 0; border-top: 1px solid var(--terminal-border); }
+}

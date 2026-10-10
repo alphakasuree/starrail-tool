@@ -47,7 +47,11 @@
     }
     function validateTeams(teams) {
         if (teams === null) return;
-        require(Array.isArray(teams) && teams.length <= 10000 && teams.every(team => object(team) && Array.isArray(team.ids) && team.ids.length === 4 && team.ids.every(id => string(id) && id.length > 0) && new Set(team.ids).size === 4 && integer(team.savedAt, 8640000000000000) && ['ownedOnly', 'fourStarOnly', 'acheronE2', 'offensive'].every(key => team[key] === undefined || typeof team[key] === 'boolean')), '저장 파티 데이터가 올바르지 않습니다.');
+        require(Array.isArray(teams) && teams.length <= 10000 && teams.every(team => {
+            if (!object(team) || !Array.isArray(team.ids) || team.ids.length !== 4) return false;
+            const filled=team.ids.filter(id=>id!==null);
+            return (team.mode===undefined || team.mode==='free') && team.ids.every(id => team.mode==='free' && id===null || string(id) && id.length>0) && new Set(filled).size===filled.length && integer(team.savedAt,8640000000000000) && (team.name===undefined || string(team.name) && team.name.length<=60) && (team.note===undefined || string(team.note) && team.note.length<=1000) && ['ownedOnly','fourStarOnly','acheronE2','offensive'].every(key=>team[key]===undefined || typeof team[key]==='boolean');
+        }), '저장 파티 데이터가 올바르지 않습니다.');
     }
     function validate(save) {
         require(object(save) && save.format === FORMAT, '이 사이트에서 내보낸 세이브 파일을 선택해주세요.');

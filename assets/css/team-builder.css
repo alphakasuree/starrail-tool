@@ -85,3 +85,55 @@
     .team-header { flex-wrap: wrap; gap: 8px; }
 }
 @media (max-height: 800px) { .team-controls { position: static; } }
+
+#team-screen [hidden] { display: none !important; }
+.team-mode-switch { display: flex; gap: 8px; margin-bottom: 24px; }
+.team-mode-switch button, .party-layout button { font: inherit; cursor: pointer; border: 1px solid #514564; border-radius: 10px; background: #1c2033; color: #e6def4; min-height: 44px; padding: 10px 14px; }
+.team-mode-switch button[aria-pressed=true], .party-layout .party-primary { background: #d9baff; border-color: #d9baff; color: #211332; font-weight: 700; }
+.party-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 22px; align-items: start; }
+.party-layout > * { min-width: 0; }
+.party-library, .party-editor { padding: 22px; border: 1px solid #4b4264; border-radius: 18px; background: #15192c; }
+.party-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.party-section-heading h2 { font-size: 18px; font-weight: 800; overflow-wrap: anywhere; }
+#party-count { font-size: 13px; color: #cbb3eb; margin-left: 5px; }
+.party-eyebrow { font-size: 11px; color: #c7a3f4; letter-spacing: .16em; }
+#party-list { display: grid; gap: 12px; margin-top: 18px; max-height: 650px; overflow-y: auto; }
+.party-layout .party-card { display: grid; width: 100%; gap: 10px; text-align: left; padding: 14px; background: #0e1324; }
+.party-card[aria-pressed=true] { border-color: #d9baff; box-shadow: inset 3px 0 #d9baff; }
+.party-card strong { font-size: 14px; overflow-wrap: anywhere; }
+.party-card small { color: #a3acc6; font-size: 12px; }
+.party-thumbnails { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.party-thumbnails img, .party-thumbnails > span { width: 100%; height: 62px; object-fit: cover; border-radius: 6px; background: #24233a; }
+.party-thumbnails > span { display: grid; place-items: center; color: #9e8bbb; }
+.party-empty { text-align: center; padding: 30px 5px; color: #a3acc6; line-height: 1.8; }
+.party-empty > span { font-size: 32px; color: #d9baff; }
+.party-empty small { font-size: 12px; }
+.party-slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
+.party-slot { position: relative; min-width: 0; }
+.party-layout .party-slot-select { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; min-height: 245px; padding: 14px 6px 48px; background: linear-gradient(155deg, #2e2441, #0e1425); }
+.party-slot-select > small { font-size: 10px; color: #c4a6e6; letter-spacing: .12em; margin-bottom: 10px; }
+.party-slot-select img { height: 115px; width: 100%; object-fit: contain; margin-bottom: 8px; }
+.party-slot-select strong { font-size: 14px; overflow-wrap: anywhere; }
+.party-slot-select > span:not(.party-slot-plus) { font-size: 11px; color: #b1b6cb; margin-top: 5px; }
+.party-slot-plus { display: grid; height: 115px; place-items: center; font-size: 38px; color: #b199d2; margin-bottom: 8px; }
+.party-layout .party-slot-remove { position: absolute; bottom: 8px; left: 15%; width: 70%; min-height: 32px; padding: 4px; font-size: 12px; background: #15192c; }
+.party-editor label, .party-picker > label:not(.team-checkbox) { display: block; font-size: 14px; color: #c4bed9; margin: 16px 0 8px; }
+.party-editor input:not([type=checkbox]), .party-editor textarea { width: 100%; min-width: 0; padding: 12px; border: 1px solid #514963; border-radius: 10px; background: #0a1020; color: #eff0fa; font: inherit; font-size: 16px; }
+.party-editor textarea { resize: vertical; }
+.party-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.party-layout .party-danger { color: #ffb7c1; margin-left: auto; }
+.party-delete-confirmation { margin-top: 20px; padding: 18px; border: 1px solid #aa6577; border-radius: 12px; background: #322130; }
+.party-delete-confirmation h3 { color: #ffd0d8; font-size: 16px; font-weight: 700; }
+.party-delete-confirmation p { margin-top: 8px; color: #dbc1cf; font-size: 14px; line-height: 1.8; }
+.party-delete-confirmation .party-danger { background: #743448; border-color: #aa6577; color: #fff0f3; }
+.party-layout button:disabled { opacity: .45; cursor: default; }
+.party-layout button:focus-visible, .party-editor input:focus-visible, .party-editor textarea:focus-visible, .team-mode-switch button:focus-visible { outline: 2px solid #d9baff; outline-offset: 3px; }
+.party-picker { padding: 18px; border: 1px solid #9074b2; border-radius: 14px; background: #101427; margin: 16px 0 24px; }
+.party-candidates { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; max-height: 380px; overflow-y: auto; padding: 4px; }
+.party-layout .party-candidates button { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 8px 4px; background: #1c2033; }
+.party-candidates img { width: 70px; height: 80px; object-fit: contain; }
+.party-candidates strong { font-size: 12px; overflow-wrap: anywhere; }
+.party-candidates small { font-size: 10px; color: #b9b3ca; }
+.party-candidates button[aria-pressed=true] { border-color: #d9baff; }
+@media (max-width: 900px) { .party-layout { grid-template-columns: minmax(0, 1fr); } #party-list { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); max-height: 300px; } }
+@media (max-width: 600px) { .party-library, .party-editor { padding: 16px; } .party-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .party-slot-select { min-height: 220px; } .party-section-heading { flex-wrap: wrap; } .party-picker { padding: 12px; } }
