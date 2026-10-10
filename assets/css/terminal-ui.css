@@ -8,6 +8,7 @@
     --terminal-ink: #f0f2ed;
     --terminal-secondary: #d0d9d5;
     --terminal-border: #e0e9e22e;
+    --terminal-control-border: color-mix(in srgb, var(--terminal-secondary) 50%, var(--terminal-bg));
     --terminal-inset: color-mix(in srgb, var(--terminal-bg) 78%, #172024);
     --terminal-selected: color-mix(in srgb, var(--terminal-bg) 84%, var(--terminal-accent));
 }
@@ -79,7 +80,7 @@
     #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
     :is(input:not([type=checkbox]):not([type=radio]), select, textarea) {
     background: var(--terminal-inset);
-    border: 1px solid var(--terminal-border);
+    border: 1px solid var(--terminal-control-border);
     border-radius: 6px;
     color: var(--terminal-ink);
     box-shadow: none;
@@ -253,6 +254,137 @@
 }
 #team-screen :is(.party-eyebrow, .party-slot-select > small, .party-slot-plus, .party-empty > span, #party-count) { color: var(--terminal-accent); }
 #team-screen .party-thumbnails > span { background: var(--terminal-inset); color: var(--terminal-secondary); }
+
+/* Component selectors must not restore the previous blue/gold tool palettes. */
+#prep-screen .prep-workspace > .prep-panel,
+#relic-screen .relic-workspace-card {
+    background: var(--terminal-surface);
+    border-color: var(--terminal-border);
+}
+#prep-screen .prep-state { background: transparent; }
+#prep-screen :is(.prep-state legend, .prep-method summary, .prep-help summary,
+    .prep-detail summary, #forecast-card summary, #prep-plan-summary,
+    .prep-search-choice > span:last-child) { color: var(--terminal-accent); }
+#prep-screen :is(.prep-search-choice, .prep-search-choice:disabled, .prep-goal-footer button) {
+    background: var(--terminal-inset);
+    border-color: var(--terminal-border);
+    color: var(--terminal-ink);
+}
+#prep-screen .prep-search-choice:not(:disabled):hover {
+    background: var(--terminal-selected); border-color: var(--terminal-accent);
+}
+#prep-screen :is(.prep-search-choice small, #prep-simulation) { color: var(--terminal-secondary); }
+#prep-screen .prep-table tbody tr:nth-child(even) { background: var(--terminal-inset); }
+#prep-screen .prep-table tbody tr:last-child { background: var(--terminal-selected); }
+#prep-screen .prep-table td { color: var(--terminal-ink); }
+#prep-screen .prep-actions .prep-primary { box-shadow: 0 8px 24px #10191f30; }
+#prep-screen :is(.prep-panel > h2, .prep-section-heading, #prep-result > h2,
+    #prep-plan-summary, #forecast-card, .prep-detail, .prep-table-wrap) { border-color: var(--terminal-border); }
+
+#team-screen :is(#team-saved button, .party-layout .party-card,
+    .party-layout .party-slot-select, .party-layout .party-slot-remove,
+    .party-layout .party-candidates button) {
+    background: var(--terminal-inset); border-color: var(--terminal-border); color: var(--terminal-ink);
+}
+#team-screen :is(#team-saved button, .party-layout .party-card,
+    .party-layout .party-candidates button)[aria-pressed=true] {
+    background: var(--terminal-selected); border-color: var(--terminal-accent);
+    box-shadow: inset 0 -2px var(--terminal-accent);
+}
+#team-screen :is(.team-method summary, .team-method a, .team-recommendation a) { color: var(--terminal-accent); }
+#team-screen :is(.team-header, #team-saved small, .party-candidates small) { color: var(--terminal-secondary); }
+#team-screen :is(.team-method, .team-empty, #team-saved-preview:not(:empty)) { border-color: var(--terminal-border); }
+#team-screen .team-empty { color: var(--terminal-secondary); }
+
+#relic-screen :is(.relic-reference-card summary, .relic-save-panel summary,
+    .relic-weight-details summary, .relic-method a, #relic-character-meta) { color: var(--terminal-accent); }
+#relic-screen :is(.relic-tool-heading p, .relic-tool-caption, .relic-stat-row > span,
+    .relic-weight-details summary span, .relic-metrics span, .relic-rank-scale,
+    .relic-contribution > div:first-child, #compare-result:empty::before) { color: var(--terminal-secondary); }
+#relic-screen :is(.relic-tool-heading, .relic-save-panel, .relic-weight-details,
+    .relic-metrics, .relic-method, #compare-result:empty) { border-color: var(--terminal-border); }
+#relic-screen .relic-compare-slot button {
+    background: transparent; border-color: var(--terminal-control-border); color: var(--terminal-accent);
+}
+#relic-screen #speed-result .tool-metric { background: var(--terminal-inset); border-color: var(--terminal-border); }
+#relic-screen .relic-bar { background: var(--terminal-inset); }
+#relic-screen .relic-score-ring { background: conic-gradient(var(--rank-color) var(--score-angle), var(--terminal-inset) 0); }
+
+:is(#account-dialog, #save-dialog, #profile-login-screen, #lobby-screen) :is(
+    .save-counts > div, .uid-character, .profile-import-panel) {
+    background: var(--terminal-inset); border-color: var(--terminal-border); color: var(--terminal-ink);
+}
+:is(#account-dialog, #save-dialog, #profile-login-screen, #lobby-screen) :is(
+    .save-header small, .save-counts strong, .uid-character summary, .profile-server-link, .tool-status) { color: var(--terminal-accent); }
+:is(#account-dialog, #save-dialog, #profile-login-screen, #lobby-screen) :is(
+    .save-counts span, #uid-sync-status, #save-status, #profile-account-status) { color: var(--terminal-secondary); }
+:is(#account-dialog, #profile-login-screen) :is(.uid-character h3, .profile-login-intro strong) { color: var(--terminal-ink); }
+#save-file::file-selector-button {
+    background: var(--terminal-action); color: #1e272b;
+}
+#lobby-screen .profile-import-panel :is(input, select) {
+    background: var(--terminal-inset); color: var(--terminal-ink); border-color: var(--terminal-control-border);
+}
+#lobby-screen .profile-import-panel button {
+    background: var(--terminal-action); color: #1e272b;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    :is(input, textarea)::placeholder { color: var(--terminal-secondary); opacity: .8; }
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    option { background: var(--terminal-inset); color: var(--terminal-ink); }
+#relic-form :is(input, select):focus,
+#team-screen .team-controls :is(input, select):focus {
+    outline: 2px solid var(--terminal-accent); outline-offset: 3px;
+}
+
+/* Unchecked native checkboxes otherwise keep the operating system's grey fill. */
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    :is(input[type=checkbox], input[type=radio]) {
+    appearance: none;
+    flex-shrink: 0;
+    width: 18px; height: 18px; min-height: 0;
+    padding: 0;
+    border: 1px solid var(--terminal-control-border);
+    border-radius: 4px;
+    background: var(--terminal-inset) center / 14px 14px no-repeat;
+    vertical-align: middle;
+    cursor: pointer;
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    :is(input[type=checkbox], input[type=radio]):checked {
+    border-color: var(--terminal-accent);
+    background-color: var(--terminal-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3 8 3 3 7-7' fill='none' stroke='%231e272b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    input[type=radio] { border-radius: 50%; }
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    input[type=radio]:checked {
+    background-image: radial-gradient(circle, #1e272b 0 4px, transparent 4.5px);
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    input[type=checkbox]:indeterminate {
+    background-color: var(--terminal-accent); border-color: var(--terminal-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8h10' stroke='%231e272b' stroke-width='2'/%3E%3C/svg%3E");
+}
+:is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+    #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+    :is(input, select, textarea):disabled { opacity: .55; cursor: not-allowed; }
+/* Keep the higher-specificity form rules on the same control border. */
+:is(#relic-screen, #prep-screen, #account-dialog) :is(#relic-form, .tool-card)
+    :is(input:not([type=checkbox]):not([type=radio]), select, textarea) { border-color: var(--terminal-control-border); }
+@media (forced-colors: active) {
+    :is(#team-screen, #relic-screen, #prep-screen, #account-dialog, #save-dialog,
+        #spec-card-dialog, #warp-banner-dialog, #collection-modal, #profile-login-screen, #character-chat)
+        :is(input[type=checkbox], input[type=radio]) { appearance: auto; background: revert; }
+}
 @media (max-width: 600px) {
     #spec-card-dialog { padding: 12px; }
     #warp-screen .warp-panel { border-radius: 8px 8px 0 0; border-right: 0; border-top: 1px solid var(--terminal-border); }

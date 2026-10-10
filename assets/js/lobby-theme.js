@@ -51,7 +51,14 @@
             `hsl(${Math.round(hue)} 52% 79%)`, `hsl(${Math.round(hue)} 48% 77%)`, `hsl(${Math.round(hue)} 50% 83%)`];
     }
     function update() {
-        if (art.dataset.artwork === 'unavailable') { reset(); return; }
+        const requestedSource = art.getAttribute('src') || art.src;
+        const characterId = requestedSource.match(/\/(?:character-art|characters)\/([^/]+)\.(?:webp|png)(?:[?#].*)?$/)?.[1];
+        const savedColors = globalThis.LobbyPalettes?.[characterId];
+        const apply = colors => targets.forEach(target => properties.forEach((name, index) => target.style.setProperty(name, colors[index])));
+        const fallback = () => savedColors ? apply(savedColors) : reset();
+        // Apply immediately, including when canvas access is blocked for local files.
+        if (savedColors) { apply(savedColors); return; }
+        if (art.dataset.artwork === 'unavailable') { fallback(); return; }
         if (!art.complete || !art.naturalWidth) return;
         const source = art.currentSrc || art.src;
         try {
@@ -59,17 +66,17 @@
                 const canvas = document.createElement('canvas');
                 canvas.width = canvas.height = 48;
                 const context = canvas.getContext('2d', {willReadFrequently: true});
-                if (!context) { reset(); return; }
+                if (!context) { fallback(); return; }
                 context.drawImage(art, 0, 0, 48, 48);
                 cache.set(source, palette(context.getImageData(0, 0, 48, 48).data));
                 if (cache.size > 100) cache.delete(cache.keys().next().value);
             }
             const colors = cache.get(source);
-            if (!colors) { reset(); return; }
-            targets.forEach(target => properties.forEach((name, index) => target.style.setProperty(name, colors[index])));
+            if (!colors) { fallback(); return; }
+            apply(colors);
         } catch {
             // Blocked canvas access or failed artwork keeps the neutral theme usable.
-            reset();
+            fallback();
         }
     }
     art.addEventListener('load', update);

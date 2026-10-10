@@ -277,7 +277,7 @@ const db = [
                 const kind = type === 'character' ? '캐릭터' : '광추';
                 const warpName = `${kind} ${choice.collaboration ? '콜라보' : '이벤트'} 워프`;
                 document.getElementById(`lobby-pickup-${type}`).setAttribute('aria-label', `${item.name} · ${choice.title} ${kind} 픽업 입장`);
-                document.getElementById(`lobby-title-${type}`).textContent = `${choice.title} ↗`;
+                document.getElementById(`lobby-title-${type}`).textContent = type === 'character' ? choice.title : `${choice.title} ↗`;
                 document.getElementById(`lobby-tag-${type}`).textContent = warpName;
                 const detail = type === 'character' ? [item.pathName,item.elementName].filter(Boolean).join(' · ') : '';
                 document.getElementById(`lobby-description-${type}`).innerHTML = `★5 ${escapeHTML(item.name)}${detail ? ' · '+escapeHTML(detail) : ''}<br>${escapeHTML(warpName)}`;
