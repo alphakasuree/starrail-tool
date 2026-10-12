@@ -61,7 +61,7 @@
 .warp-cinema { --signal: #b8dbff; position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; perspective: 900px; transition: --signal 1s ease; }
 .warp-cinema::before { content: ''; position: absolute; inset: -20%; background: radial-gradient(ellipse, transparent 12%, #19395855 36%, #02040cf0 70%); transition: background 1s; }
 .warp-cinema::before { background: radial-gradient(ellipse, transparent 8%, color-mix(in srgb, var(--signal) 18%, transparent) 40%, #02040c 70%); }
-.warp-orbits { position: absolute; width: min(calc(66 * var(--ui-vw)), 440px); aspect-ratio: 1; opacity: 0; transform: scale(.5); transition: opacity .8s, transform 1.2s cubic-bezier(.16,1,.3,1); }
+.warp-orbits { isolation: isolate; position: absolute; width: min(calc(66 * var(--ui-vw)), 440px); aspect-ratio: 1; opacity: 0; transform: scale(.5); transition: opacity .8s, transform 1.2s cubic-bezier(.16,1,.3,1); }
 .warp-orbit { position: absolute; inset: 0; border: 1px solid #b8d9ff55; border-radius: 50%; box-shadow: 0 0 22px #90c5ff22, inset 0 0 22px #90c5ff11; transition: border-color .8s ease, box-shadow .8s ease; }
 .warp-orbit::before, .warp-orbit::after { content: ''; position: absolute; top: 50%; width: 7px; height: 7px; border-radius: 50%; background: #e6f3ff; box-shadow: 0 0 16px 3px var(--signal); }
 .warp-orbit::before { left: -4px; }.warp-orbit::after { right: -4px; }
